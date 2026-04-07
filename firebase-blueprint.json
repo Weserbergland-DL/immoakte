@@ -1,0 +1,168 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user of the application (landlord/property manager).",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "email": { "type": "string", "format": "email", "description": "User's email address" },
+        "name": { "type": "string", "description": "User's full name" },
+        "company": { "type": "string", "description": "Optional company name" },
+        "createdAt": { "type": "timestamp", "description": "Account creation time" }
+      },
+      "required": ["uid", "email", "name", "createdAt"]
+    },
+    "Property": {
+      "title": "Property",
+      "description": "A rental property managed by the user.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique property ID" },
+        "ownerId": { "type": "string", "description": "UID of the user who owns this property" },
+        "address": { "type": "string", "description": "Full address of the property" },
+        "street": { "type": "string", "description": "Street name" },
+        "houseNumber": { "type": "string", "description": "House number" },
+        "zipCode": { "type": "string", "description": "Zip code" },
+        "city": { "type": "string", "description": "City" },
+        "type": { "type": "string", "description": "Type of property (e.g., Apartment, House)" },
+        "rooms": { "type": "number", "description": "Number of rooms" },
+        "createdAt": { "type": "timestamp", "description": "Creation time" }
+      },
+      "required": ["id", "ownerId", "address", "createdAt"]
+    },
+    "Protocol": {
+      "title": "Protocol",
+      "description": "A handover protocol for a property.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique protocol ID" },
+        "propertyId": { "type": "string", "description": "ID of the associated property" },
+        "ownerId": { "type": "string", "description": "UID of the user who created this protocol" },
+        "tenantSalutation": { "type": "string", "enum": ["Herr", "Frau", "Divers", "Firma"], "description": "Salutation of the tenant" },
+        "tenantFirstName": { "type": "string", "description": "First name of the tenant" },
+        "tenantLastName": { "type": "string", "description": "Last name of the tenant" },
+        "tenantEmail": { "type": "string", "format": "email", "description": "Email address of the tenant" },
+        "tenantPhone": { "type": "string", "description": "Phone number of the tenant" },
+        "date": { "type": "timestamp", "description": "Date of the handover" },
+        "type": { "type": "string", "enum": ["Einzug", "Auszug"], "description": "Type of handover" },
+        "status": { "type": "string", "enum": ["draft", "final"], "description": "Status of the protocol" },
+        "linkedProtocolId": { "type": "string", "description": "ID of the linked Einzug/Auszug protocol" },
+        "tenantNewAddress": { "type": "string", "description": "New address of the tenant (for Auszug)" },
+        "witnesses": { "type": "string", "description": "Names of witnesses present" },
+        "rooms": {
+          "type": "array",
+          "description": "List of inspected rooms",
+          "items": { "$ref": "#/entities/RoomInspection" }
+        },
+        "meters": {
+          "type": "array",
+          "description": "List of meter readings",
+          "items": { "$ref": "#/entities/MeterReading" }
+        },
+        "keys": {
+          "type": "array",
+          "description": "List of handed over keys",
+          "items": { "$ref": "#/entities/KeyHandover" }
+        },
+        "generalCondition": { "type": "string", "description": "General condition of the apartment" },
+        "landlordSignature": { "type": "string", "description": "Base64 encoded signature of landlord" },
+        "tenantSignature": { "type": "string", "description": "Base64 encoded signature of tenant" },
+        "pdfUrl": { "type": "string", "description": "URL to the generated PDF" },
+        "createdAt": { "type": "timestamp", "description": "Creation time" },
+        "updatedAt": { "type": "timestamp", "description": "Last update time" }
+      },
+      "required": ["id", "propertyId", "ownerId", "tenantFirstName", "tenantLastName", "date", "type", "status", "createdAt", "updatedAt"]
+    },
+    "RoomInspection": {
+      "title": "RoomInspection",
+      "description": "Inspection details for a specific room.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "description": "Name of the room" },
+        "condition": { "type": "string", "enum": ["Alles okay", "Nicht okay"] },
+        "defects": {
+          "type": "array",
+          "description": "List of specific defects in the room",
+          "items": { "$ref": "#/entities/Defect" }
+        }
+      },
+      "required": ["id", "name", "condition"]
+    },
+    "Defect": {
+      "title": "Defect",
+      "description": "Details of a specific defect or damage.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "description": { "type": "string", "description": "Description of the defect" },
+        "photoUrls": {
+          "type": "array",
+          "description": "List of URLs to photos of the defect",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["id", "description", "photoUrls"]
+    },
+    "MeterReading": {
+      "title": "MeterReading",
+      "description": "Reading for a utility meter.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["Strom", "Wasser", "Gas", "Heizung"] },
+        "number": { "type": "string", "description": "Meter number" },
+        "reading": { "type": "string", "description": "Current reading" },
+        "photoUrl": { "type": "string", "description": "URL to a photo of the meter" }
+      },
+      "required": ["id", "type", "number", "reading"]
+    },
+    "KeyHandover": {
+      "title": "KeyHandover",
+      "description": "Details about handed over keys.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "description": { "type": "string", "description": "Description of the key (e.g., Haustür, Briefkasten)" },
+        "count": { "type": "number", "description": "Number of keys" }
+      },
+      "required": ["id", "description", "count"]
+    },
+    "Feedback": {
+      "title": "Feedback",
+      "description": "User feedback, bug reports, or feature requests.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string", "description": "UID of the user who submitted the feedback" },
+        "type": { "type": "string", "enum": ["bug", "feature", "error"], "description": "Type of feedback" },
+        "message": { "type": "string", "description": "Feedback message or description" },
+        "errorDetails": { "type": "string", "description": "Optional error stack trace or details" },
+        "url": { "type": "string", "description": "URL where the feedback was submitted" },
+        "imageUrl": { "type": "string", "description": "Optional URL to an uploaded image or screenshot" },
+        "status": { "type": "string", "enum": ["new", "resolved"], "description": "Status of the feedback" },
+        "createdAt": { "type": "timestamp", "description": "Creation time" }
+      },
+      "required": ["id", "userId", "type", "message", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles. Document ID is the Firebase Auth UID."
+    },
+    "properties/{propertyId}": {
+      "schema": { "$ref": "#/entities/Property" },
+      "description": "Properties managed by users."
+    },
+    "protocols/{protocolId}": {
+      "schema": { "$ref": "#/entities/Protocol" },
+      "description": "Handover protocols."
+    },
+    "feedback/{feedbackId}": {
+      "schema": { "$ref": "#/entities/Feedback" },
+      "description": "User feedback and bug reports."
+    }
+  }
+}

@@ -1,0 +1,216 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId} (matches auth.uid)
+    // Fields:
+    //   - uid: string (required)
+    //   - email: string (required)
+    //   - name: string (required)
+    //   - company: string (optional)
+    //   - role: string (optional, 'admin' or 'user')
+    //   - createdAt: timestamp (required, immutable)
+    //
+    // Collection: properties
+    // Document ID: {propertyId}
+    // Fields:
+    //   - id: string (required)
+    //   - ownerId: string (required, immutable)
+    //   - address: string (required)
+    //   - type: string (optional)
+    //   - rooms: number (optional)
+    //   - createdAt: timestamp (required, immutable)
+    //
+    // Collection: protocols
+    // Document ID: {protocolId}
+    // Fields:
+    //   - id: string (required)
+    //   - propertyId: string (required)
+    //   - ownerId: string (required, immutable)
+    //   - tenantSalutation: string (optional)
+    //   - tenantFirstName: string (required)
+    //   - tenantLastName: string (required)
+    //   - tenantEmail: string (optional)
+    //   - tenantPhone: string (optional)
+    //   - date: timestamp (required)
+    //   - type: string (required, 'Einzug' or 'Auszug')
+    //   - status: string (required, 'draft' or 'final')
+    //   - rooms: list (optional)
+    //   - meters: list (optional)
+    //   - keys: list (optional)
+    //   - generalCondition: string (optional)
+    //   - landlordSignature: string (optional)
+    //   - tenantSignature: string (optional)
+    //   - pdfUrl: string (optional)
+    //   - createdAt: timestamp (required, immutable)
+    //   - updatedAt: timestamp (required)
+    //
+    // Collection: feedback
+    // Document ID: {feedbackId}
+    // Fields:
+    //   - id: string (required)
+    //   - userId: string (required, immutable)
+    //   - type: string (required, 'bug', 'feature', 'error')
+    //   - message: string (required)
+    //   - errorDetails: string (optional)
+    //   - url: string (optional)
+    //   - imageUrl: string (optional)
+    //   - status: string (required, 'new', 'resolved')
+    //   - createdAt: timestamp (required, immutable)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'user') == 'admin' ||
+          request.auth.token.email == "info@weserbergland-dienstleistungen.de");
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.ownerId;
+    }
+
+    function uidUnchanged() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == request.auth.uid;
+    }
+
+    function ownerIdUnchanged() {
+      return !('ownerId' in request.resource.data) || request.resource.data.ownerId == request.auth.uid;
+    }
+
+    function ownerIdNotModified() {
+      return !('ownerId' in request.resource.data) || request.resource.data.ownerId == resource.data.ownerId;
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return hasRequiredFields(['uid', 'email', 'name', 'createdAt']) &&
+             data.uid is string && data.uid == request.auth.uid &&
+             data.email is string && isValidEmail(data.email) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             (!('company' in data) || (data.company is string && data.company.size() < 100)) &&
+             (!('role' in data) || (data.role is string && data.role in ['admin', 'user'])) &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidProperty(data) {
+      return hasRequiredFields(['id', 'ownerId', 'address', 'createdAt']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() < 100 &&
+             data.ownerId is string && data.ownerId == request.auth.uid &&
+             data.address is string && data.address.size() > 0 && data.address.size() < 500 &&
+             (!('street' in data) || (data.street is string && data.street.size() <= 200)) &&
+             (!('houseNumber' in data) || (data.houseNumber is string && data.houseNumber.size() <= 50)) &&
+             (!('zipCode' in data) || (data.zipCode is string && data.zipCode.size() <= 20)) &&
+             (!('city' in data) || (data.city is string && data.city.size() <= 100)) &&
+             (!('type' in data) || (data.type is string && data.type.size() < 100)) &&
+             (!('rooms' in data) || (data.rooms is number && data.rooms >= 0 && data.rooms < 100)) &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidProtocol(data) {
+      return hasRequiredFields(['id', 'propertyId', 'ownerId', 'date', 'type', 'status', 'createdAt', 'updatedAt']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() < 100 &&
+             data.propertyId is string && data.propertyId.size() > 0 && data.propertyId.size() < 100 &&
+             data.ownerId is string && data.ownerId == request.auth.uid &&
+             (!('tenantName' in data) || data.tenantName == null || (data.tenantName is string && data.tenantName.size() <= 200)) &&
+             (!('tenantFirstName' in data) || data.tenantFirstName == null || (data.tenantFirstName is string && data.tenantFirstName.size() <= 100)) &&
+             (!('tenantLastName' in data) || data.tenantLastName == null || (data.tenantLastName is string && data.tenantLastName.size() <= 100)) &&
+             (!('tenantSalutation' in data) || data.tenantSalutation == null || (data.tenantSalutation is string && (data.tenantSalutation == '' || data.tenantSalutation in ['Herr', 'Frau', 'Divers', 'Firma']))) &&
+             (!('tenantEmail' in data) || data.tenantEmail == null || (data.tenantEmail is string && (data.tenantEmail == '' || isValidEmail(data.tenantEmail)))) &&
+             (!('tenantPhone' in data) || data.tenantPhone == null || (data.tenantPhone is string && data.tenantPhone.size() <= 50)) &&
+             data.date is timestamp &&
+             data.type in ['Einzug', 'Auszug'] &&
+             data.status in ['draft', 'final'] &&
+             (!('rooms' in data) || data.rooms == null || data.rooms is list) &&
+             (!('meters' in data) || data.meters == null || data.meters is list) &&
+             (!('keys' in data) || data.keys == null || data.keys is list) &&
+             (!('generalCondition' in data) || data.generalCondition == null || (data.generalCondition is string && data.generalCondition.size() < 10000)) &&
+             (!('linkedProtocolId' in data) || data.linkedProtocolId == null || (data.linkedProtocolId is string && data.linkedProtocolId.size() < 100)) &&
+             (!('tenantNewAddress' in data) || data.tenantNewAddress == null || (data.tenantNewAddress is string && data.tenantNewAddress.size() < 500)) &&
+             (!('witnesses' in data) || data.witnesses == null || (data.witnesses is string && data.witnesses.size() < 500)) &&
+             (!('landlordSignature' in data) || data.landlordSignature == null || (data.landlordSignature is string && data.landlordSignature.size() < 5000000)) &&
+             (!('tenantSignature' in data) || data.tenantSignature == null || (data.tenantSignature is string && data.tenantSignature.size() < 5000000)) &&
+             (!('pdfUrl' in data) || data.pdfUrl == null || (data.pdfUrl is string && data.pdfUrl.size() < 2000)) &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp;
+    }
+
+    function isValidFeedback(data) {
+      return hasRequiredFields(['id', 'userId', 'type', 'message', 'status', 'createdAt']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() < 100 &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.type in ['bug', 'feature', 'error'] &&
+             data.message is string && data.message.size() > 0 && data.message.size() < 5000 &&
+             (!('errorDetails' in data) || data.errorDetails == null || (data.errorDetails is string && data.errorDetails.size() < 10000)) &&
+             (!('url' in data) || data.url == null || (data.url is string && data.url.size() < 1000)) &&
+             (!('imageUrl' in data) || data.imageUrl == null || (data.imageUrl is string && data.imageUrl.size() < 2000)) &&
+             data.status in ['new', 'resolved'] &&
+             data.createdAt is timestamp;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) && uidUnchanged() && (!('role' in request.resource.data) || request.resource.data.role == 'user' || isAdmin());
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) && areImmutableFieldsUnchanged(['uid', 'createdAt']) && ((isOwner(userId) && (!('role' in request.resource.data) || request.resource.data.role == resource.data.role)) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /properties/{propertyId} {
+      allow read: if isDocOwner();
+      allow create: if isAuthenticated() && isValidProperty(request.resource.data) && ownerIdUnchanged();
+      allow update: if isDocOwner() && isValidProperty(request.resource.data) && areImmutableFieldsUnchanged(['id', 'ownerId', 'createdAt']);
+      allow delete: if isDocOwner();
+    }
+
+    match /protocols/{protocolId} {
+      allow read: if isDocOwner();
+      allow create: if isAuthenticated() && isValidProtocol(request.resource.data) && ownerIdUnchanged();
+      allow update: if isDocOwner() && isValidProtocol(request.resource.data) && areImmutableFieldsUnchanged(['id', 'propertyId', 'ownerId', 'createdAt']);
+      allow delete: if isDocOwner() && resource.data.status == 'draft'; // Only allow deleting drafts
+    }
+
+    match /feedback/{feedbackId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow create: if isAuthenticated() && isValidFeedback(request.resource.data) && (!('userId' in request.resource.data) || request.resource.data.userId == request.auth.uid);
+      allow update: if isAdmin(); // Only admins can update feedback (e.g. status)
+      allow delete: if isAdmin(); // Only admins can delete feedback
+    }
+  }
+}

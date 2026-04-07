@@ -1,0 +1,103 @@
+'use client'
+
+import React, { createContext, useContext, useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import type { User } from '@supabase/supabase-js'
+
+interface AuthContextType {
+  user: User | null
+  isAdmin: boolean
+  loading: boolean
+  signInWithGoogle: () => Promise<void>
+  signInWithEmail: (email: string, password: string) => Promise<void>
+  signUpWithEmail: (email: string, password: string, name: string) => Promise<void>
+  logout: () => Promise<void>
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const currentUser = session?.user ?? null
+      setUser(currentUser)
+      setIsAdmin(false)
+
+      if (currentUser) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', currentUser.id)
+          .single()
+
+        if (profile?.role === 'admin' || currentUser.email === 'info@weserbergland-dienstleistungen.de') {
+          setIsAdmin(true)
+        }
+      }
+
+      setLoading(false)
+    })
+
+    // Initial session check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) setLoading(false)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    })
+    if (error) throw error
+  }
+
+  const signInWithEmail = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) throw error
+  }
+
+  const signUpWithEmail = async (email: string, password: string, name: string) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { name },
+        emailRedirectTo: `${window.location.origin}/login`,
+      },
+    })
+    if (error) throw error
+    // Supabase sends confirmation email automatically.
+    // The DB trigger `handle_new_user` creates the profile.
+    // Sign out so user must confirm email first.
+    await supabase.auth.signOut()
+  }
+
+  const logout = async () => {
+    const { error } = await supabase.auth.signOut()
+    if (error) throw error
+  }
+
+  return (
+    <AuthContext.Provider value={{ user, isAdmin, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, logout }}>
+      {!loading && children}
+    </AuthContext.Provider>
+  )
+}
+
+export const useAuth = () => {
+  const context = useContext(AuthContext)
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return context
+}

@@ -1,0 +1,5 @@
+{
+  "name": "Protokoll-Pro",
+  "description": "Die digitale Mietübergabe für private Vermieter. Rechtssichere PDF-Protokolle mit Fotobeweisen und digitalen Unterschriften.",
+  "requestFramePermissions": ["camera", "geolocation"]
+}
