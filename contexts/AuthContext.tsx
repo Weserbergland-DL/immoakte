@@ -23,29 +23,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const supabase = createClient()
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const checkAdmin = async (currentUser: User | null) => {
+      if (!currentUser) return false
+      const { data: profile } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', currentUser.id)
+        .single()
+      return profile?.role === 'admin' || currentUser.email === 'info@weserbergland-dienstleistungen.de'
+    }
+
+    // Load initial session immediately
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       const currentUser = session?.user ?? null
       setUser(currentUser)
-      setIsAdmin(false)
-
-      if (currentUser) {
-        const { data: profile } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', currentUser.id)
-          .single()
-
-        if (profile?.role === 'admin' || currentUser.email === 'info@weserbergland-dienstleistungen.de') {
-          setIsAdmin(true)
-        }
-      }
-
+      setIsAdmin(await checkAdmin(currentUser))
       setLoading(false)
     })
 
-    // Initial session check
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) setLoading(false)
+    // Listen for subsequent auth changes (login, logout, token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const currentUser = session?.user ?? null
+      setUser(currentUser)
+      setIsAdmin(await checkAdmin(currentUser))
+      setLoading(false)
     })
 
     return () => subscription.unsubscribe()
