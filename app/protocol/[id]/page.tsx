@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, createRef } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
@@ -15,7 +15,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import { ArrowLeft, Camera, CheckCircle, Droplets, FileText, Flame, Home, Key, Lock, Plus, Thermometer, Trash2, Zap } from 'lucide-react'
-import { SignaturePad } from '@/components/SignaturePad'
+import { SignaturePad, type SignaturePadHandle } from '@/components/SignaturePad'
 import { PrintableProtocol } from '@/components/PrintableProtocol'
 import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
@@ -46,6 +46,10 @@ export default function ProtocolView() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false)
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false)
+  const [landlordSigEmpty, setLandlordSigEmpty] = useState(true)
+  const [tenantSigEmpty, setTenantSigEmpty] = useState(true)
+  const landlordSigRef = useRef<SignaturePadHandle>(null)
+  const tenantSigRef = useRef<SignaturePadHandle>(null)
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
 
   useEffect(() => {
@@ -263,7 +267,7 @@ export default function ProtocolView() {
     return room.defects.every((d: any) => d.description?.trim().length > 0 && d.photoUrls?.length > 0)
   }
   const areAllRoomsValid = () => (protocol.rooms || []).every(isRoomValid)
-  const areAllMetersValid = () => (protocol.meters || []).every((m: any) => m.number?.trim().length > 0 && m.reading?.trim().length > 0)
+  const areAllMetersValid = () => (protocol.meters || []).every((m: any) => m.number?.trim().length > 0 && m.reading?.trim().length > 0 && m.photoUrl?.length > 0)
 
   const sendEmail = async () => {
     toast.success(`Protokoll wurde an ${protocol.tenant_email} gesendet.`)
@@ -278,10 +282,23 @@ export default function ProtocolView() {
       return
     }
     if (!areAllMetersValid()) {
-      toast.error('Bitte füllen Sie alle Zählerdaten aus (Nummer & Stand).')
+      toast.error('Bitte füllen Sie alle Zählerdaten aus (Nummer, Stand & Foto pro Zähler).')
       setActiveTab('meters')
       return
     }
+
+    // Unterschriften aus Refs holen
+    const landlordSig = landlordSigRef.current?.getDataURL()
+    const tenantSig = tenantSigRef.current?.getDataURL()
+
+    if (!landlordSig || !tenantSig) {
+      toast.error('Beide Unterschriften werden benötigt.')
+      setActiveTab('finish')
+      return
+    }
+
+    // Unterschriften erst jetzt in DB speichern
+    await saveProtocol({ landlord_signature: landlordSig, tenant_signature: tenantSig })
 
     setIsCheckoutLoading(true)
     try {
@@ -699,7 +716,7 @@ export default function ProtocolView() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>Foto vom Zählerstand</Label>
+                    <Label className="flex items-center gap-1">Foto vom Zählerstand <span className="text-destructive">*</span></Label>
                     <div className="flex items-center gap-4">
                       {meter.photoUrl ? (
                         <div className="relative group w-24 h-24">
@@ -709,7 +726,7 @@ export default function ProtocolView() {
                           </Button>
                         </div>
                       ) : (
-                        <div className="w-24 h-24 border-2 border-dashed rounded-lg flex items-center justify-center bg-white hover:bg-slate-100 transition-colors cursor-pointer" onClick={() => fileInputRefs.current[`meter-${meter.id}`]?.click()}>
+                        <div className={`w-24 h-24 border-2 border-dashed rounded-lg flex items-center justify-center bg-white hover:bg-slate-100 transition-colors cursor-pointer ${!meter.photoUrl ? 'border-destructive/50' : ''}`} onClick={() => fileInputRefs.current[`meter-${meter.id}`]?.click()}>
                           <input
                             type="file"
                             ref={(el) => { fileInputRefs.current[`meter-${meter.id}`] = el }}
@@ -823,24 +840,19 @@ export default function ProtocolView() {
                 )}
 
                 <div className="border-t pt-6">
-                  <SignaturePad label="Unterschrift Vermieter" onSave={(sig) => saveProtocol({ landlord_signature: sig })} />
-                  {protocol.landlord_signature && (
-                    <div className="mt-2 text-sm text-green-600 flex items-center">
-                      <CheckCircle className="h-4 w-4 mr-1" /> Gespeichert
-                    </div>
-                  )}
+                  <SignaturePad
+                    ref={landlordSigRef}
+                    label="Unterschrift Vermieter"
+                    onChange={(empty) => setLandlordSigEmpty(empty)}
+                  />
                 </div>
 
                 <div className="border-t pt-6">
                   <SignaturePad
+                    ref={tenantSigRef}
                     label={`Unterschrift Mieter (${protocol.tenant_first_name} ${protocol.tenant_last_name})`}
-                    onSave={(sig) => saveProtocol({ tenant_signature: sig })}
+                    onChange={(empty) => setTenantSigEmpty(empty)}
                   />
-                  {protocol.tenant_signature && (
-                    <div className="mt-2 text-sm text-green-600 flex items-center">
-                      <CheckCircle className="h-4 w-4 mr-1" /> Gespeichert
-                    </div>
-                  )}
                 </div>
 
                 <div className="border-t pt-6">
@@ -863,16 +875,13 @@ export default function ProtocolView() {
                       <Button
                         className="w-full" size="lg"
                         onClick={handleFinalize}
-                        disabled={!protocol.landlord_signature || !protocol.tenant_signature || !areAllRoomsValid() || !areAllMetersValid() || isCheckoutLoading}
+                        disabled={isCheckoutLoading}
                       >
                         <FileText className="mr-2 h-5 w-5" />
                         {isCheckoutLoading ? 'Wird verarbeitet...' : 'PDF Generieren & Abschließen'}
                       </Button>
-                      {(!protocol.landlord_signature || !protocol.tenant_signature) && (
+                      {(landlordSigEmpty || tenantSigEmpty) && (
                         <p className="text-xs text-center text-muted-foreground mt-2">Beide Unterschriften werden benötigt.</p>
-                      )}
-                      {(!areAllRoomsValid() || !areAllMetersValid()) && (
-                        <p className="text-xs text-center text-destructive mt-2">Bitte füllen Sie alle Pflichtfelder aus (Mängeldetails & Zählerdaten).</p>
                       )}
                     </>
                   )}
