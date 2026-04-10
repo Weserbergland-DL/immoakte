@@ -26,6 +26,7 @@ interface Protocol {
   property_id: string
   propertyAddress?: string
   linked_protocol_id?: string | null
+  finalized_at?: string | null
   rooms?: any[]
   meters?: any[]
   keys?: any[]
