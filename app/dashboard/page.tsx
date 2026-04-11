@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Plus, FileText, LogOut, Settings, Trash2, ShieldCheck } from 'lucide-react'
+import { Plus, FileText, LogOut, Settings, Trash2, ShieldCheck, Copy } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
@@ -200,6 +200,26 @@ export default function Dashboard() {
     setProtocolToDelete(null)
   }
 
+  const duplicateTenancy = async (group: TenancyGroup) => {
+    toast.loading('Mietverhältnis wird dupliziert...', { id: 'dup' })
+    try {
+      const res = await fetch('/api/duplicate-tenancy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          einzugId: group.einzug?.id,
+          auszugId: group.auszug?.id,
+        }),
+      })
+      if (!res.ok) throw new Error()
+      toast.success('Mietverhältnis dupliziert', { id: 'dup' })
+      // Seite neu laden um neuen Eintrag anzuzeigen
+      window.location.reload()
+    } catch {
+      toast.error('Fehler beim Duplizieren', { id: 'dup' })
+    }
+  }
+
   if (!user) return null
 
   return (
@@ -291,6 +311,15 @@ export default function Dashboard() {
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Mietverhältnis</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                      title="Mietverhältnis duplizieren"
+                      onClick={() => duplicateTenancy(group)}
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
                   <CardTitle className="text-lg">{group.tenantName}</CardTitle>
                   {group.propertyAddress && (
