@@ -42,6 +42,7 @@ interface Document {
 
 interface TenancyGroup {
   id: string
+  tenancyId?: string   // real tenancy table ID (may differ from einzug.id for new tenancies)
   tenantName: string
   propertyAddress?: string
   einzug?: Protocol
@@ -92,9 +93,10 @@ interface TenancyCardProps {
   onDelete: (id: string) => void
   onDuplicate: (group: TenancyGroup) => void
   onAuszugCreated: (auszug: Protocol) => void
+  onOpenTenancy: (group: TenancyGroup) => void
 }
 
-export function TenancyCard({ group, userId, onDelete, onDuplicate, onAuszugCreated }: TenancyCardProps) {
+export function TenancyCard({ group, userId, onDelete, onDuplicate, onAuszugCreated, onOpenTenancy }: TenancyCardProps) {
   const router = useRouter()
   const supabase = createClient()
   const [showDocMenu, setShowDocMenu] = useState(false)
@@ -162,12 +164,16 @@ export function TenancyCard({ group, userId, onDelete, onDuplicate, onAuszugCrea
   useState(() => { if (group.einzug) loadDocuments() })
 
   return (
-    <Card className="hover:border-primary/40 transition-colors flex flex-col">
+    <Card
+      className="hover:border-primary/40 hover:shadow-md transition-all flex flex-col cursor-pointer"
+      onClick={() => onOpenTenancy(group)}
+    >
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Mietverhältnis</span>
           <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground"
-            title="Mietverhältnis duplizieren" onClick={() => onDuplicate(group)}>
+            title="Mietverhältnis duplizieren"
+            onClick={(e) => { e.stopPropagation(); onDuplicate(group) }}>
             <Copy className="h-3.5 w-3.5" />
           </Button>
         </div>
@@ -184,7 +190,7 @@ export function TenancyCard({ group, userId, onDelete, onDuplicate, onAuszugCrea
         {/* Protocols */}
         {group.einzug && (
           <button className="flex items-center justify-between rounded-md bg-slate-50 border border-slate-200 px-3 py-2 text-left hover:bg-slate-100 transition-colors w-full"
-            onClick={() => router.push(`/protocol/${group.einzug!.id}`)}>
+            onClick={(e) => { e.stopPropagation(); router.push(`/protocol/${group.einzug!.id}`) }}>
             <div>
               <p className="text-sm font-medium flex items-center gap-1.5">
                 <FileText className="h-3.5 w-3.5 text-slate-400" /> Einzug
@@ -194,10 +200,10 @@ export function TenancyCard({ group, userId, onDelete, onDuplicate, onAuszugCrea
             <div className="flex items-center gap-2">
               <StatusBadge finalized={group.einzug.finalized_at} />
               {!group.einzug.finalized_at && (
-                <button className="p-1 hover:text-destructive text-muted-foreground transition-colors"
+                <span className="p-1 hover:text-destructive text-muted-foreground transition-colors"
                   onClick={(e) => { e.stopPropagation(); onDelete(group.einzug!.id) }}>
                   <Trash2 className="h-3.5 w-3.5" />
-                </button>
+                </span>
               )}
             </div>
           </button>
@@ -205,7 +211,7 @@ export function TenancyCard({ group, userId, onDelete, onDuplicate, onAuszugCrea
 
         {group.auszug ? (
           <button className="flex items-center justify-between rounded-md bg-slate-50 border border-slate-200 px-3 py-2 text-left hover:bg-slate-100 transition-colors w-full"
-            onClick={() => router.push(`/protocol/${group.auszug!.id}`)}>
+            onClick={(e) => { e.stopPropagation(); router.push(`/protocol/${group.auszug!.id}`) }}>
             <div>
               <p className="text-sm font-medium flex items-center gap-1.5">
                 <FileCheck className="h-3.5 w-3.5 text-slate-400" /> Auszug
@@ -215,17 +221,17 @@ export function TenancyCard({ group, userId, onDelete, onDuplicate, onAuszugCrea
             <div className="flex items-center gap-2">
               <StatusBadge finalized={group.auszug.finalized_at} />
               {!group.auszug.finalized_at && (
-                <button className="p-1 hover:text-destructive text-muted-foreground transition-colors"
+                <span className="p-1 hover:text-destructive text-muted-foreground transition-colors"
                   onClick={(e) => { e.stopPropagation(); onDelete(group.auszug!.id) }}>
                   <Trash2 className="h-3.5 w-3.5" />
-                </button>
+                </span>
               )}
             </div>
           </button>
         ) : (
           group.einzug?.finalized_at && (
             <button className="flex items-center justify-between rounded-md border border-dashed border-slate-300 px-3 py-2 text-left hover:border-slate-400 hover:bg-slate-50 transition-colors w-full"
-              onClick={createAuszug}>
+              onClick={(e) => { e.stopPropagation(); createAuszug() }}>
               <p className="text-sm text-muted-foreground flex items-center gap-1.5">
                 <Plus className="h-3.5 w-3.5" /> Auszugsprotokoll
               </p>
@@ -241,7 +247,7 @@ export function TenancyCard({ group, userId, onDelete, onDuplicate, onAuszugCrea
               .map(doc => (
               <button key={doc.id}
                 className="flex items-center justify-between w-full rounded-md px-3 py-1.5 hover:bg-slate-50 transition-colors text-left"
-                onClick={() => router.push(`/documents/${doc.id}`)}>
+                onClick={(e) => { e.stopPropagation(); router.push(`/documents/${doc.id}`) }}>
                 <p className="text-sm flex items-center gap-1.5 text-slate-700">
                   <DocIcon type={doc.type} />
                   <span className="truncate max-w-[160px]">{doc.name}</span>
@@ -256,7 +262,7 @@ export function TenancyCard({ group, userId, onDelete, onDuplicate, onAuszugCrea
         <div className="relative mt-auto">
           <button
             className="flex items-center justify-center gap-1.5 w-full rounded-md border border-dashed border-primary/40 px-3 py-2 text-sm text-primary hover:bg-primary/5 transition-colors mt-1"
-            onClick={() => { setShowDocMenu(v => !v); loadDocuments() }}
+            onClick={(e) => { e.stopPropagation(); setShowDocMenu(v => !v); loadDocuments() }}
             disabled={creatingDoc}
           >
             <Plus className="h-3.5 w-3.5" />
@@ -267,7 +273,7 @@ export function TenancyCard({ group, userId, onDelete, onDuplicate, onAuszugCrea
           {showDocMenu && (
             <div className="absolute bottom-full mb-1 left-0 right-0 bg-white rounded-lg border border-slate-200 shadow-lg z-10 overflow-hidden">
               {DOC_TYPES.map(({ type, label, icon: Icon, hint }) => (
-                <button key={type} onClick={() => createDocument(type)}
+                <button key={type} onClick={(e) => { e.stopPropagation(); createDocument(type) }}
                   className="flex items-center gap-2.5 w-full px-3 py-2.5 hover:bg-slate-50 transition-colors text-left">
                   <Icon className="h-4 w-4 text-primary shrink-0" />
                   <span className="flex-1">

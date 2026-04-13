@@ -214,8 +214,8 @@ export default function Dashboard() {
       <main className="mx-auto mt-6 max-w-5xl px-4 w-full">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-2xl font-bold tracking-tight">Meine Protokolle</h2>
-          <Button onClick={() => router.push('/protocol/new')}>
-            <Plus className="mr-2 h-4 w-4" /> Neues Protokoll
+          <Button onClick={() => router.push('/tenancy/new')}>
+            <Plus className="mr-2 h-4 w-4" /> Neues Mietverhältnis
           </Button>
         </div>
 
@@ -231,8 +231,8 @@ export default function Dashboard() {
               <p className="mb-4 text-sm text-muted-foreground max-w-sm">
                 Erstellen Sie Ihr erstes Übergabeprotokoll — kostenlos und in Minuten erledigt.
               </p>
-              <Button onClick={() => router.push('/protocol/new')}>
-                <Plus className="mr-2 h-4 w-4" /> Erstes Protokoll erstellen
+              <Button onClick={() => router.push('/tenancy/new')}>
+                <Plus className="mr-2 h-4 w-4" /> Erstes Mietverhältnis erstellen
               </Button>
             </CardContent>
           </Card>
@@ -245,6 +245,11 @@ export default function Dashboard() {
                 userId={user.id}
                 onDelete={confirmDelete}
                 onDuplicate={duplicateTenancy}
+                onOpenTenancy={(g) => {
+                  // Navigate to tenancy hub — use tenancyId if available, else einzug id
+                  const tenancyId = g.tenancyId || g.einzug?.id
+                  if (tenancyId) router.push(`/tenancy/${tenancyId}`)
+                }}
                 onAuszugCreated={(auszug) => {
                   setTenancies(prev => prev.map(g =>
                     g.id === group.id ? { ...g, auszug } : g
