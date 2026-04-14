@@ -38,7 +38,7 @@ const ITEM_CONFIG: Record<string, {
   wohnungsgeberbestaetigung: { label: 'Wohnungsgeberbestätigung',   icon: Home,          hint: 'Pflicht bei Einzug',     order: 3, kind: 'document'  },
   kautionsbescheinigung:     { label: 'Kautionsbescheinigung',      icon: Key,           hint: 'Nach Kautionszahlung',   order: 4, kind: 'document'  },
   Auszug:                    { label: 'Auszugsprotokoll',           icon: FileCheck,     hint: 'Bei Auszug',             order: 5, kind: 'protocol'  },
-  sonstiges:                 { label: 'Eigenes Dokument',           icon: FileText,      hint: '',                       order: 6, kind: 'document'  },
+  sonstiges:                 { label: 'Leeres Dokument',            icon: FileText,      hint: 'Freier Text, eigene Vorlage', order: 6, kind: 'document'  },
 }
 
 function safeDate(d?: string | null) {
@@ -78,8 +78,16 @@ export default function TenancyPage() {
   }, [id, user])
 
   const loadData = async () => {
-    const res = await fetch(`/api/tenancies/${id}`)
-    const json = await res.json()
+    let json: any
+    try {
+      const res = await fetch(`/api/tenancies/${id}`)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      json = await res.json()
+    } catch {
+      toast.error('Daten konnten nicht geladen werden')
+      router.push('/dashboard')
+      return
+    }
     if (json.error) { toast.error('Nicht gefunden'); router.push('/dashboard'); return }
 
     setTenancy(json.tenancy)
@@ -126,7 +134,29 @@ export default function TenancyPage() {
 
     try {
       if (cfg.kind === 'protocol') {
-        // Create protocol with tenant data pre-filled from tenancy
+        const einzugItem = items.find(i => i.type === 'Einzug')
+
+        // For Auszug: load Einzug data to pre-fill rooms/meters/keys
+        let einzugData: any = null
+        if (type === 'Auszug' && einzugItem) {
+          const { data } = await supabase.from('protocols').select('rooms,meters,keys').eq('id', einzugItem.id).single()
+          einzugData = data
+        }
+
+        const rooms = type === 'Auszug'
+          ? (einzugData?.rooms?.map((r: any) => ({ ...r, defects: r.defects || [] })) || [])
+          : []
+        const meters = type === 'Auszug'
+          ? (einzugData?.meters?.map((m: any) => ({ ...m, reading: '', photoUrl: '' })) || [
+              { id: crypto.randomUUID(), type: 'Strom', number: '', reading: '', photoUrl: '' },
+              { id: crypto.randomUUID(), type: 'Wasser', number: '', reading: '', photoUrl: '' },
+            ])
+          : [
+              { id: crypto.randomUUID(), type: 'Strom', number: '', reading: '', photoUrl: '' },
+              { id: crypto.randomUUID(), type: 'Wasser', number: '', reading: '', photoUrl: '' },
+            ]
+        const keys = type === 'Auszug' ? (einzugData?.keys || []) : []
+
         const { data: proto, error } = await supabase.from('protocols').insert({
           tenancy_id: id,
           property_id: tenancy.property_id,
@@ -139,16 +169,10 @@ export default function TenancyPage() {
           date: new Date().toISOString(),
           type,
           status: 'draft',
-          rooms: [],
-          meters: [
-            { id: crypto.randomUUID(), type: 'Strom', number: '', reading: '', photoUrl: '' },
-            { id: crypto.randomUUID(), type: 'Wasser', number: '', reading: '', photoUrl: '' },
-          ],
-          keys: [],
-          ...(type === 'Auszug' ? {
-            // Pre-fill rooms from Einzug if available
-            linked_protocol_id: items.find(i => i.type === 'Einzug')?.id || null,
-          } : {}),
+          rooms,
+          meters,
+          keys,
+          linked_protocol_id: type === 'Auszug' ? (einzugItem?.id || null) : null,
         }).select().single()
 
         if (error) throw error
@@ -378,7 +402,7 @@ export default function TenancyPage() {
                 <div className="h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
                   <Plus className="h-4 w-4 text-slate-500" />
                 </div>
-                <p className="text-sm text-slate-500">Eigenes Dokument erstellen</p>
+                <p className="text-sm text-slate-500">Leeres Dokument erstellen</p>
               </button>
             </div>
           </div>

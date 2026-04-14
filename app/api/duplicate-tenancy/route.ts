@@ -8,10 +8,11 @@ const supabaseAdmin = createAdminClient(
 )
 
 // Tief-kopiert ein Protokoll inkl. aller JSONB-Daten (rooms, meters, keys mit Fotos)
-async function duplicateProtocol(original: any, userId: string, linkedId?: string) {
+async function duplicateProtocol(original: any, userId: string, newTenancyId: string, linkedId?: string) {
   const { data, error } = await supabaseAdmin
     .from('protocols')
     .insert({
+      tenancy_id: newTenancyId,
       property_id: original.property_id,
       owner_id: userId,
       tenant_salutation: original.tenant_salutation,
@@ -44,37 +45,68 @@ export async function POST(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const { einzugId, auszugId } = await request.json()
-    if (!einzugId) return NextResponse.json({ error: 'einzugId fehlt' }, { status: 400 })
+    const { tenancyId, einzugId, auszugId } = await request.json()
+    if (!tenancyId) return NextResponse.json({ error: 'tenancyId fehlt' }, { status: 400 })
 
-    // Original-Protokolle laden (nur eigene)
-    const { data: einzug, error: e1 } = await supabaseAdmin
-      .from('protocols')
+    // Original-Mietverhältnis laden (nur eigene)
+    const { data: originalTenancy, error: tErr } = await supabaseAdmin
+      .from('tenancies')
       .select('*')
-      .eq('id', einzugId)
+      .eq('id', tenancyId)
       .eq('owner_id', user.id)
       .single()
 
-    if (e1 || !einzug) return NextResponse.json({ error: 'Einzug nicht gefunden' }, { status: 404 })
+    if (tErr || !originalTenancy) return NextResponse.json({ error: 'Mietverhältnis nicht gefunden' }, { status: 404 })
 
-    // Einzug duplizieren
-    const newEinzug = await duplicateProtocol(einzug, user.id)
+    // Neues Mietverhältnis anlegen (gleiche Immobilie, gleiche Mieterdaten als Vorlage)
+    const { data: newTenancy, error: newTErr } = await supabaseAdmin
+      .from('tenancies')
+      .insert({
+        owner_id: user.id,
+        property_id: originalTenancy.property_id,
+        tenant_salutation: originalTenancy.tenant_salutation,
+        tenant_first_name: originalTenancy.tenant_first_name,
+        tenant_last_name: originalTenancy.tenant_last_name,
+        tenant_email: originalTenancy.tenant_email,
+        tenant_phone: originalTenancy.tenant_phone,
+        tenant_street: originalTenancy.tenant_street,
+        tenant_house_number: originalTenancy.tenant_house_number,
+        tenant_zip_code: originalTenancy.tenant_zip_code,
+        tenant_city: originalTenancy.tenant_city,
+      })
+      .select()
+      .single()
 
-    // Auszug duplizieren falls vorhanden, mit neuer linked_protocol_id
-    if (auszugId) {
-      const { data: auszug } = await supabaseAdmin
+    if (newTErr || !newTenancy) throw new Error(newTErr?.message || 'Mietverhältnis konnte nicht erstellt werden')
+
+    // Protokolle duplizieren, falls vorhanden
+    if (einzugId) {
+      const { data: einzug } = await supabaseAdmin
         .from('protocols')
         .select('*')
-        .eq('id', auszugId)
+        .eq('id', einzugId)
         .eq('owner_id', user.id)
         .single()
 
-      if (auszug) {
-        await duplicateProtocol(auszug, user.id, newEinzug.id)
+      if (einzug) {
+        const newEinzug = await duplicateProtocol(einzug, user.id, newTenancy.id)
+
+        if (auszugId) {
+          const { data: auszug } = await supabaseAdmin
+            .from('protocols')
+            .select('*')
+            .eq('id', auszugId)
+            .eq('owner_id', user.id)
+            .single()
+
+          if (auszug) {
+            await duplicateProtocol(auszug, user.id, newTenancy.id, newEinzug.id)
+          }
+        }
       }
     }
 
-    return NextResponse.json({ success: true, newEinzugId: newEinzug.id })
+    return NextResponse.json({ success: true, newTenancyId: newTenancy.id })
   } catch (error: any) {
     console.error('Duplicate error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })

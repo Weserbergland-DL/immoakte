@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -194,7 +194,7 @@ export function TenancyCard({ group, userId, onDelete, onDuplicate, onAuszugCrea
   }
 
   // Load docs when card mounts if tenancy exists
-  useState(() => { if (group.tenancyId || group.einzug) loadDocuments() })
+  useEffect(() => { if (group.tenancyId || group.einzug) loadDocuments() }, [])
 
   return (
     <Card

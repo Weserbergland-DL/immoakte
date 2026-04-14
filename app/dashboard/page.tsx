@@ -177,7 +177,7 @@ export default function Dashboard() {
       const res = await fetch('/api/duplicate-tenancy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ einzugId: group.einzug?.id, auszugId: group.auszug?.id }),
+        body: JSON.stringify({ tenancyId: group.tenancyId || group.id, einzugId: group.einzug?.id, auszugId: group.auszug?.id }),
       })
       if (!res.ok) throw new Error()
       toast.success('Mietverhältnis dupliziert', { id: 'dup' })

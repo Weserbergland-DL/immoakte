@@ -40,13 +40,20 @@ export default function DocumentPage() {
   useEffect(() => {
     if (!user) { router.replace('/login'); return }
     fetch(`/api/documents/${id}`)
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        return r.json()
+      })
       .then(({ document, error }) => {
         if (error) { toast.error('Dokument nicht gefunden'); router.replace('/dashboard'); return }
         setDoc(document)
         setName(document.name)
         setContent(document.content)
         setLoading(false)
+      })
+      .catch(() => {
+        toast.error('Dokument konnte nicht geladen werden')
+        router.replace('/dashboard')
       })
   }, [id, user])
 

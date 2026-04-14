@@ -38,7 +38,10 @@ export default function EditTenancy() {
   useEffect(() => {
     if (!user) { router.replace('/login'); return }
     fetch(`/api/tenancies/${id}`)
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        return r.json()
+      })
       .then(({ tenancy, error }) => {
         if (error || !tenancy) { toast.error('Nicht gefunden'); router.push('/dashboard'); return }
         const prop = tenancy.properties
@@ -58,6 +61,10 @@ export default function EditTenancy() {
           city: prop?.city || '',
         })
         setInitialLoading(false)
+      })
+      .catch(() => {
+        toast.error('Daten konnten nicht geladen werden')
+        router.push('/dashboard')
       })
   }, [id, user])
 
