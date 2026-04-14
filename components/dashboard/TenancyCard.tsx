@@ -120,6 +120,14 @@ export function TenancyCard({ group, userId, onDelete, onDuplicate, onAuszugCrea
     setDocsLoaded(true)
   }
 
+  const deleteDocument = async (docId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    const res = await fetch(`/api/documents/${docId}`, { method: 'DELETE' })
+    if (!res.ok) { toast.error('Fehler beim Löschen'); return }
+    setDocuments(prev => prev.filter(d => d.id !== docId))
+    toast.success('Dokument gelöscht')
+  }
+
   const createDocument = async (type: string) => {
     setCreatingDoc(true)
     setShowDocMenu(false)
@@ -269,15 +277,24 @@ export function TenancyCard({ group, userId, onDelete, onDuplicate, onAuszugCrea
             {[...documents]
               .sort((a, b) => (DOC_TYPE_ORDER[a.type] ?? 99) - (DOC_TYPE_ORDER[b.type] ?? 99))
               .map(doc => (
-              <button key={doc.id}
-                className="flex items-center justify-between w-full rounded-md px-3 py-1.5 hover:bg-slate-50 transition-colors text-left"
-                onClick={(e) => { e.stopPropagation(); router.push(`/documents/${doc.id}`) }}>
-                <p className="text-sm flex items-center gap-1.5 text-slate-700">
-                  <DocIcon type={doc.type} />
-                  <span className="truncate max-w-[160px]">{doc.name}</span>
-                </p>
-                <StatusBadge finalized={doc.finalized_at} />
-              </button>
+              <div key={doc.id} className="flex items-center w-full group/doc">
+                <button
+                  className="flex items-center justify-between flex-1 rounded-md px-3 py-1.5 hover:bg-slate-50 transition-colors text-left"
+                  onClick={(e) => { e.stopPropagation(); router.push(`/documents/${doc.id}`) }}>
+                  <p className="text-sm flex items-center gap-1.5 text-slate-700">
+                    <DocIcon type={doc.type} />
+                    <span className="truncate max-w-[140px]">{doc.name}</span>
+                  </p>
+                  <StatusBadge finalized={doc.finalized_at} />
+                </button>
+                {!doc.finalized_at && (
+                  <span
+                    className="p-1 ml-1 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover/doc:opacity-100 cursor-pointer shrink-0"
+                    onClick={(e) => deleteDocument(doc.id, e)}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </span>
+                )}
+              </div>
             ))}
           </div>
         )}

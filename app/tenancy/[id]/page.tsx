@@ -215,6 +215,13 @@ export default function TenancyPage() {
     else router.push(`/documents/${item.id}`)
   }
 
+  const deleteDocument = async (docId: string) => {
+    const res = await fetch(`/api/documents/${docId}`, { method: 'DELETE' })
+    if (!res.ok) { toast.error('Fehler beim Löschen'); return }
+    setItems(prev => prev.filter(i => i.id !== docId))
+    toast.success('Dokument gelöscht')
+  }
+
   if (loading || !tenancy) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -319,41 +326,53 @@ export default function TenancyPage() {
                 const done = item.status === 'final'
 
                 return (
-                  <button
-                    key={item.id}
-                    onClick={() => navigateToItem(item)}
-                    className="relative flex items-center gap-4 w-full bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-3.5 hover:border-primary/40 hover:shadow-md transition-all text-left group"
-                  >
-                    {/* Icon with done indicator */}
-                    <div className={`relative shrink-0 h-10 w-10 rounded-full flex items-center justify-center z-10 ${
-                      done ? 'bg-green-100' : 'bg-slate-100'
-                    }`}>
-                      <Icon className={`h-5 w-5 ${done ? 'text-green-600' : 'text-slate-500'}`} />
-                      {done && (
-                        <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 bg-green-500 rounded-full flex items-center justify-center">
-                          <CheckCircle2 className="h-3 w-3 text-white" />
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-slate-900 text-sm">{item.name}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {cfg?.hint && <span className="mr-2">{cfg.hint}</span>}
-                        {done && item.finalized_at && (
-                          <span className="text-green-600">✓ {safeDate(item.finalized_at)}</span>
+                  <div key={item.id} className="relative flex items-center gap-2 group/item">
+                    <button
+                      onClick={() => navigateToItem(item)}
+                      className="relative flex items-center gap-4 flex-1 bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-3.5 hover:border-primary/40 hover:shadow-md transition-all text-left group"
+                    >
+                      {/* Icon with done indicator */}
+                      <div className={`relative shrink-0 h-10 w-10 rounded-full flex items-center justify-center z-10 ${
+                        done ? 'bg-green-100' : 'bg-slate-100'
+                      }`}>
+                        <Icon className={`h-5 w-5 ${done ? 'text-green-600' : 'text-slate-500'}`} />
+                        {done && (
+                          <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 bg-green-500 rounded-full flex items-center justify-center">
+                            <CheckCircle2 className="h-3 w-3 text-white" />
+                          </div>
                         )}
-                        {!done && item.date && (
-                          <span>{safeDate(item.date)}</span>
-                        )}
-                      </p>
-                    </div>
+                      </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      <StatusBadge status={item.status} finalized={item.finalized_at} />
-                      <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-primary transition-colors" />
-                    </div>
-                  </button>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-slate-900 text-sm">{item.name}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {cfg?.hint && <span className="mr-2">{cfg.hint}</span>}
+                          {done && item.finalized_at && (
+                            <span className="text-green-600">✓ {safeDate(item.finalized_at)}</span>
+                          )}
+                          {!done && item.date && (
+                            <span>{safeDate(item.date)}</span>
+                          )}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <StatusBadge status={item.status} finalized={item.finalized_at} />
+                        <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-primary transition-colors" />
+                      </div>
+                    </button>
+
+                    {/* Delete button for non-finalized documents */}
+                    {item.kind === 'document' && !item.finalized_at && (
+                      <button
+                        onClick={() => deleteDocument(item.id)}
+                        className="p-2 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover/item:opacity-100 shrink-0"
+                        title="Dokument löschen"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
                 )
               })}
             </div>
