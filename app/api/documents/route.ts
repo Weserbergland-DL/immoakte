@@ -90,10 +90,15 @@ export async function POST(request: NextRequest) {
     '{{vermieter_email}}':   profile?.email_contact || '',
     '{{vermieter_iban}}':    profile?.iban || '',
     '{{vermieter_bank}}':    profile?.bank_name || '',
-    '{{mieter_anrede}}': tenancyData?.tenant_salutation || '',
-    '{{mieter_vorname}}': tenancyData?.tenant_first_name || '',
+    '{{mieter_anrede}}':   tenancyData?.tenant_salutation || '',
+    '{{mieter_vorname}}':  tenancyData?.tenant_first_name || '',
     '{{mieter_nachname}}': tenancyData?.tenant_last_name || '',
-    '{{mieter_name}}': `${tenancyData?.tenant_first_name || ''} ${tenancyData?.tenant_last_name || ''}`.trim(),
+    '{{mieter_name}}':     `${tenancyData?.tenant_first_name || ''} ${tenancyData?.tenant_last_name || ''}`.trim(),
+    '{{mieter_strasse}}':  tenancyData?.tenant_street ? `${tenancyData.tenant_street} ${tenancyData.tenant_house_number || ''}`.trim() : '',
+    '{{mieter_plz_ort}}':  tenancyData?.tenant_zip_code ? `${tenancyData.tenant_zip_code} ${tenancyData.tenant_city || ''}`.trim() : '',
+    '{{mieter_adresse}}':  tenancyData?.tenant_street
+      ? `${tenancyData.tenant_street} ${tenancyData.tenant_house_number || ''}, ${tenancyData.tenant_zip_code || ''} ${tenancyData.tenant_city || ''}`.trim()
+      : '',
     '{{adresse}}': address,
     '{{strasse}}': propertyData ? `${propertyData.street || ''} ${propertyData.house_number || ''}`.trim() : '',
     '{{plz_ort}}': propertyData ? `${propertyData.zip_code || ''} ${propertyData.city || ''}`.trim() : '',

@@ -20,6 +20,9 @@ export const PLACEHOLDER_LABELS: Record<string, string> = {
   '{{mieter_vorname}}':     'Mieter Vorname',
   '{{mieter_nachname}}':    'Mieter Nachname',
   '{{mieter_name}}':        'Mieter vollständiger Name',
+  '{{mieter_adresse}}':     'Mieter aktuelle Adresse',
+  '{{mieter_strasse}}':     'Mieter Straße + Nr.',
+  '{{mieter_plz_ort}}':     'Mieter PLZ + Ort',
   '{{adresse}}':            'Wohnungs-Adresse',
   '{{strasse}}':            'Straße + Hausnummer',
   '{{plz_ort}}':            'PLZ + Ort',
@@ -108,7 +111,8 @@ Unterschrift Vermieter<br>
 Telefon: {{vermieter_telefon}}<br>
 E-Mail: {{vermieter_email}}</p>
 <p><strong>Mieter:</strong><br>
-{{mieter_anrede}} {{mieter_vorname}} {{mieter_nachname}}</p>
+{{mieter_anrede}} {{mieter_vorname}} {{mieter_nachname}}<br>
+{{mieter_adresse}}</p>
 
 <h2>§ 2 Mietobjekt</h2>
 <p>Vermietet wird die Wohnung in: <strong>{{adresse}}</strong></p>

@@ -25,6 +25,10 @@ export default function EditTenancy() {
     tenant_last_name: '',
     tenant_email: '',
     tenant_phone: '',
+    tenant_street: '',
+    tenant_house_number: '',
+    tenant_zip_code: '',
+    tenant_city: '',
     street: '',
     house_number: '',
     zip_code: '',
@@ -44,6 +48,10 @@ export default function EditTenancy() {
           tenant_last_name: tenancy.tenant_last_name || '',
           tenant_email: tenancy.tenant_email || '',
           tenant_phone: tenancy.tenant_phone || '',
+          tenant_street: tenancy.tenant_street || '',
+          tenant_house_number: tenancy.tenant_house_number || '',
+          tenant_zip_code: tenancy.tenant_zip_code || '',
+          tenant_city: tenancy.tenant_city || '',
           street: prop?.street || '',
           house_number: prop?.house_number || '',
           zip_code: prop?.zip_code || '',
@@ -133,6 +141,36 @@ export default function EditTenancy() {
                     <Label>Telefon <span className="text-muted-foreground text-xs">(optional)</span></Label>
                     <Input type="tel" placeholder="+49 123 456789" value={form.tenant_phone}
                       onChange={e => set('tenant_phone', e.target.value)} />
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-slate-100">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                    Aktuelle Adresse des Mieters <span className="normal-case font-normal">(optional, für Mietvertrag)</span>
+                  </p>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="col-span-2 space-y-2">
+                      <Label>Straße</Label>
+                      <Input placeholder="Hauptstraße" value={form.tenant_street}
+                        onChange={e => set('tenant_street', e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Hausnr.</Label>
+                      <Input placeholder="5b" value={form.tenant_house_number}
+                        onChange={e => set('tenant_house_number', e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 mt-4">
+                    <div className="space-y-2">
+                      <Label>PLZ</Label>
+                      <Input placeholder="12345" value={form.tenant_zip_code}
+                        onChange={e => set('tenant_zip_code', e.target.value)} />
+                    </div>
+                    <div className="col-span-2 space-y-2">
+                      <Label>Ort</Label>
+                      <Input placeholder="Musterstadt" value={form.tenant_city}
+                        onChange={e => set('tenant_city', e.target.value)} />
+                    </div>
                   </div>
                 </div>
               </div>
