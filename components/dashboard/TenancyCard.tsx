@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -101,6 +101,18 @@ export function TenancyCard({ group, userId, onDelete, onDuplicate, onAuszugCrea
   const [docsLoaded, setDocsLoaded] = useState(false)
   const [creatingDoc, setCreatingDoc] = useState(false)
   const [docToDelete, setDocToDelete] = useState<Document | null>(null)
+  const docMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!showDocMenu) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (docMenuRef.current && !docMenuRef.current.contains(e.target as Node)) {
+        setShowDocMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showDocMenu])
 
   const loadDocuments = async () => {
     if (docsLoaded) return
@@ -307,7 +319,7 @@ export function TenancyCard({ group, userId, onDelete, onDuplicate, onAuszugCrea
       </div>
 
       {/* Add menu — attached to bottom */}
-      <div className="relative px-5 pb-5">
+      <div ref={docMenuRef} className="relative px-5 pb-5">
         <button
           className={cn(
             'flex items-center justify-center gap-1.5 w-full rounded-lg border border-dashed px-3 py-2 text-sm transition-colors',
