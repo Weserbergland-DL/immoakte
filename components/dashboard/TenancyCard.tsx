@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import {
   Plus, Trash2, Copy, FileText, FileCheck, Home, Key,
-  ChevronDown, FilePen, FileSignature, Building2
+  ChevronDown, FilePen, FileSignature, Building2, ClipboardList
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
@@ -60,7 +60,7 @@ const DOC_TYPES = [
   { type: 'mietvertrag', label: 'Mietvertrag', icon: FileSignature, hint: 'Vor Einzug' },
   { type: 'wohnungsgeberbestaetigung', label: 'Wohnungsgeberbestätigung', icon: Home, hint: 'Bei Einzug' },
   { type: 'kautionsbescheinigung', label: 'Kautionsbescheinigung', icon: Key, hint: 'Nach Kautionszahlung' },
-  { type: 'sonstiges', label: 'Eigenes Dokument', icon: FilePen, hint: '' },
+  { type: 'sonstiges', label: 'Leeres Dokument', icon: FilePen, hint: 'Freier Text, eigene Vorlage' },
 ]
 
 // Priority order for sorting displayed documents
@@ -129,7 +129,7 @@ export function TenancyCard({ group, userId, onDelete, onDuplicate, onAuszugCrea
       body: JSON.stringify({
         type,
         tenancy_id: group.tenancyId || group.einzug?.id || null,
-        property_id: group.einzug?.property_id || null,
+        property_id: group.propertyId || group.einzug?.property_id || null,
       }),
     })
     const { document, error } = await res.json()
@@ -221,14 +221,6 @@ export function TenancyCard({ group, userId, onDelete, onDuplicate, onAuszugCrea
 
       <CardContent className="flex-1 flex flex-col gap-2">
         {/* Protocols */}
-        {!group.einzug && (
-          <button className="flex items-center justify-between rounded-md border border-dashed border-slate-300 px-3 py-2 text-left hover:border-primary hover:bg-primary/5 transition-colors w-full"
-            onClick={(e) => { e.stopPropagation(); createEinzug() }}>
-            <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-              <Plus className="h-3.5 w-3.5" /> Einzugsprotokoll erstellen
-            </p>
-          </button>
-        )}
         {group.einzug && (
           <button className="flex items-center justify-between rounded-md bg-slate-50 border border-slate-200 px-3 py-2 text-left hover:bg-slate-100 transition-colors w-full"
             onClick={(e) => { e.stopPropagation(); router.push(`/protocol/${group.einzug!.id}`) }}>
@@ -250,7 +242,7 @@ export function TenancyCard({ group, userId, onDelete, onDuplicate, onAuszugCrea
           </button>
         )}
 
-        {group.auszug ? (
+        {group.auszug && (
           <button className="flex items-center justify-between rounded-md bg-slate-50 border border-slate-200 px-3 py-2 text-left hover:bg-slate-100 transition-colors w-full"
             onClick={(e) => { e.stopPropagation(); router.push(`/protocol/${group.auszug!.id}`) }}>
             <div>
@@ -269,15 +261,6 @@ export function TenancyCard({ group, userId, onDelete, onDuplicate, onAuszugCrea
               )}
             </div>
           </button>
-        ) : (
-          group.einzug?.finalized_at && (
-            <button className="flex items-center justify-between rounded-md border border-dashed border-slate-300 px-3 py-2 text-left hover:border-slate-400 hover:bg-slate-50 transition-colors w-full"
-              onClick={(e) => { e.stopPropagation(); createAuszug() }}>
-              <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                <Plus className="h-3.5 w-3.5" /> Auszugsprotokoll
-              </p>
-            </button>
-          )
         )}
 
         {/* Documents */}
@@ -307,12 +290,34 @@ export function TenancyCard({ group, userId, onDelete, onDuplicate, onAuszugCrea
             disabled={creatingDoc}
           >
             <Plus className="h-3.5 w-3.5" />
-            {creatingDoc ? 'Erstellt...' : 'Dokument hinzufügen'}
+            {creatingDoc ? 'Erstellt...' : 'Hinzufügen'}
             <ChevronDown className={`h-3.5 w-3.5 ml-auto transition-transform ${showDocMenu ? 'rotate-180' : ''}`} />
           </button>
 
           {showDocMenu && (
             <div className="absolute bottom-full mb-1 left-0 right-0 bg-white rounded-lg border border-slate-200 shadow-lg z-10 overflow-hidden">
+              {/* Protocol items first */}
+              {!group.einzug && (
+                <button onClick={(e) => { e.stopPropagation(); setShowDocMenu(false); createEinzug() }}
+                  className="flex items-center gap-2.5 w-full px-3 py-2.5 hover:bg-slate-50 transition-colors text-left border-b border-slate-100">
+                  <ClipboardList className="h-4 w-4 text-primary shrink-0" />
+                  <span className="flex-1">
+                    <span className="text-sm text-slate-800 block">Einzugsprotokoll</span>
+                    <span className="text-xs text-muted-foreground">Protokoll bei Einzug</span>
+                  </span>
+                </button>
+              )}
+              {group.einzug?.finalized_at && !group.auszug && (
+                <button onClick={(e) => { e.stopPropagation(); setShowDocMenu(false); createAuszug() }}
+                  className="flex items-center gap-2.5 w-full px-3 py-2.5 hover:bg-slate-50 transition-colors text-left border-b border-slate-100">
+                  <FileCheck className="h-4 w-4 text-primary shrink-0" />
+                  <span className="flex-1">
+                    <span className="text-sm text-slate-800 block">Auszugsprotokoll</span>
+                    <span className="text-xs text-muted-foreground">Protokoll bei Auszug</span>
+                  </span>
+                </button>
+              )}
+              {/* Document items */}
               {DOC_TYPES.map(({ type, label, icon: Icon, hint }) => (
                 <button key={type} onClick={(e) => { e.stopPropagation(); createDocument(type) }}
                   className="flex items-center gap-2.5 w-full px-3 py-2.5 hover:bg-slate-50 transition-colors text-left">
