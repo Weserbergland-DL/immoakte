@@ -52,6 +52,41 @@ export default function ProtocolView() {
   const tenantSigRef = useRef<SignaturePadHandle>(null)
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
   const [isOnline, setIsOnline] = useState(true)
+  const [resolvedImages, setResolvedImages] = useState<Map<string, string>>(new Map())
+
+  // Extract storage path from a full public/signed URL or return as-is if already a path
+  const extractStoragePath = (urlOrPath: string): string | null => {
+    if (!urlOrPath || urlOrPath.startsWith('data:')) return null
+    if (!urlOrPath.startsWith('http')) return urlOrPath // already a path
+    const marker = '/object/public/protocol-images/'
+    const idx = urlOrPath.indexOf(marker)
+    if (idx !== -1) return decodeURIComponent(urlOrPath.slice(idx + marker.length).split('?')[0])
+    return null
+  }
+
+  // Resolve a stored path/URL to a signed URL for display
+  const resolveImageUrl = (urlOrPath: string): string => {
+    if (!urlOrPath || urlOrPath.startsWith('data:')) return urlOrPath
+    const path = extractStoragePath(urlOrPath)
+    if (!path) return urlOrPath
+    return resolvedImages.get(path) || urlOrPath
+  }
+
+  // Batch-sign all image paths in a protocol (called once after load)
+  const loadResolvedImages = async (proto: any) => {
+    const paths = new Set<string>()
+    proto.rooms?.forEach((r: any) =>
+      r.defects?.forEach((d: any) =>
+        d.photoUrls?.forEach((u: string) => { const p = extractStoragePath(u); if (p) paths.add(p) })
+      )
+    )
+    proto.meters?.forEach((m: any) => { const p = extractStoragePath(m.photoUrl); if (p) paths.add(p) })
+    if (paths.size === 0) return
+    const { data } = await supabase.storage.from('protocol-images').createSignedUrls([...paths], 86400)
+    const map = new Map<string, string>(resolvedImages)
+    data?.forEach(({ path, signedUrl }: any) => { if (signedUrl) map.set(path, signedUrl) })
+    setResolvedImages(map)
+  }
 
   useEffect(() => {
     const onOnline  = () => setIsOnline(true)
@@ -91,6 +126,7 @@ export default function ProtocolView() {
         }
 
         setProtocol(proto)
+        loadResolvedImages(proto)
 
         if (proto.property_id) {
           const { data: prop } = await supabase
@@ -163,10 +199,14 @@ export default function ProtocolView() {
                 .from('protocol-images')
                 .upload(path, blob, { contentType: 'image/jpeg', upsert: false })
               if (error) throw error
-              const { data: { publicUrl } } = supabase.storage
+              // Generate signed URL for immediate display (24h)
+              const { data: signed } = await supabase.storage
                 .from('protocol-images')
-                .getPublicUrl(data.path)
-              resolve(publicUrl)
+                .createSignedUrl(data.path, 86400)
+              if (signed?.signedUrl) {
+                setResolvedImages(prev => new Map(prev).set(data.path, signed.signedUrl))
+              }
+              resolve(data.path) // store path in DB, not public URL
             } catch (err) {
               reject(err)
             }
@@ -180,15 +220,13 @@ export default function ProtocolView() {
     })
   }
 
-  // Delete photo from Supabase Storage (backward-compat: ignore legacy Base64 strings)
-  const deleteStoragePhoto = async (url: string) => {
-    if (!url || url.startsWith('data:')) return
+  // Delete photo from Supabase Storage (handles paths and legacy public URLs)
+  const deleteStoragePhoto = async (urlOrPath: string) => {
+    if (!urlOrPath || urlOrPath.startsWith('data:')) return
     try {
-      const marker = '/protocol-images/'
-      const idx = url.indexOf(marker)
-      if (idx === -1) return
-      const path = url.slice(idx + marker.length)
+      const path = extractStoragePath(urlOrPath) || urlOrPath
       await supabase.storage.from('protocol-images').remove([path])
+      setResolvedImages(prev => { const m = new Map(prev); m.delete(path); return m })
     } catch { /* non-critical */ }
   }
 
@@ -375,10 +413,18 @@ export default function ProtocolView() {
     }
   }
 
-  // Convert any URL (incl. authenticated Supabase URLs) to base64 data URI
-  const urlToBase64 = async (url: string): Promise<string> => {
-    if (!url) return ''
+  // Convert any URL/path to base64 data URI (resolves storage paths via signed URLs)
+  const urlToBase64 = async (urlOrPath: string): Promise<string> => {
+    if (!urlOrPath) return ''
+    if (urlOrPath.startsWith('data:')) return urlOrPath
     try {
+      let url = urlOrPath
+      // If it's a storage path (not a full URL), generate a short-lived signed URL for the PDF
+      if (!urlOrPath.startsWith('http')) {
+        const { data } = await supabase.storage.from('protocol-images').createSignedUrl(urlOrPath, 300)
+        if (!data?.signedUrl) return ''
+        url = data.signedUrl
+      }
       const res = await fetch(url)
       if (!res.ok) return ''
       const blob = await res.blob()
@@ -679,7 +725,7 @@ export default function ProtocolView() {
                       <p className="font-bold text-slate-900 text-sm">{meter.reading}</p>
                     </div>
                     {meter.photoUrl && (
-                      <img src={meter.photoUrl} alt={meter.type}
+                      <img src={resolveImageUrl(meter.photoUrl)} alt={meter.type}
                         className="h-10 w-10 object-cover rounded border border-slate-200 cursor-pointer shrink-0"
                         onClick={() => window.open(meter.photoUrl, '_blank')}
                       />
@@ -928,7 +974,7 @@ export default function ProtocolView() {
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                               {defect.photoUrls?.map((url: string, idx: number) => (
                                 <div key={idx} className="relative group/photo aspect-square">
-                                  <img src={url} alt="Schaden" className="w-full h-full object-cover rounded border" />
+                                  <img src={resolveImageUrl(url)} alt="Schaden" className="w-full h-full object-cover rounded border" />
                                   <Button
                                     variant="destructive" size="icon"
                                     className="absolute -top-1 -right-1 h-5 w-5 rounded-full opacity-0 group-hover/photo:opacity-100 transition-opacity"
@@ -1043,7 +1089,7 @@ export default function ProtocolView() {
                     <div className="flex items-center gap-4">
                       {meter.photoUrl ? (
                         <div className="relative group w-24 h-24">
-                          <img src={meter.photoUrl} alt="Zählerstand" className="w-full h-full object-cover rounded border" />
+                          <img src={resolveImageUrl(meter.photoUrl)} alt="Zählerstand" className="w-full h-full object-cover rounded border" />
                           <Button variant="destructive" size="icon" className="absolute -top-1 -right-1 h-5 w-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => updateMeter(meter.id, 'photoUrl', '')}>
                             <Trash2 className="h-3 w-3" />
                           </Button>
