@@ -14,7 +14,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { toast } from 'sonner'
-import { ArrowLeft, Camera, CheckCircle, Droplets, FileText, Flame, Home, Key, Lock, Plus, Thermometer, Trash2, Zap } from 'lucide-react'
+import { ArrowLeft, Camera, CheckCircle, Droplets, FileText, Flame, Home, Key, Lock, Plus, Thermometer, Trash2, WifiOff, Zap } from 'lucide-react'
 import { SignaturePad, type SignaturePadHandle } from '@/components/SignaturePad'
 import { PrintableProtocol } from '@/components/PrintableProtocol'
 import { format } from 'date-fns'
@@ -51,6 +51,16 @@ export default function ProtocolView() {
   const landlordSigRef = useRef<SignaturePadHandle>(null)
   const tenantSigRef = useRef<SignaturePadHandle>(null)
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
+  const [isOnline, setIsOnline] = useState(true)
+
+  useEffect(() => {
+    const onOnline  = () => setIsOnline(true)
+    const onOffline = () => setIsOnline(false)
+    setIsOnline(navigator.onLine)
+    window.addEventListener('online',  onOnline)
+    window.addEventListener('offline', onOffline)
+    return () => { window.removeEventListener('online', onOnline); window.removeEventListener('offline', onOffline) }
+  }, [])
 
   useEffect(() => {
     if (!id || !user) return
@@ -131,7 +141,7 @@ export default function ProtocolView() {
         const img = new Image()
         img.onload = () => {
           const canvas = document.createElement('canvas')
-          const MAX = 800
+          const MAX = 1200
           let width = img.width
           let height = img.height
           if (width > height) {
@@ -144,7 +154,23 @@ export default function ProtocolView() {
           const ctx = canvas.getContext('2d')
           if (!ctx) { reject(new Error('Canvas context not available')); return }
           ctx.drawImage(img, 0, 0, width, height)
-          resolve(canvas.toDataURL('image/jpeg', 0.6))
+
+          canvas.toBlob(async (blob) => {
+            if (!blob) { reject(new Error('Fehler beim Verarbeiten des Bildes')); return }
+            try {
+              const path = `${user!.id}/${id}/${crypto.randomUUID()}.jpg`
+              const { data, error } = await supabase.storage
+                .from('protocol-images')
+                .upload(path, blob, { contentType: 'image/jpeg', upsert: false })
+              if (error) throw error
+              const { data: { publicUrl } } = supabase.storage
+                .from('protocol-images')
+                .getPublicUrl(data.path)
+              resolve(publicUrl)
+            } catch (err) {
+              reject(err)
+            }
+          }, 'image/jpeg', 0.75)
         }
         img.onerror = () => reject(new Error('Fehler beim Laden des Bildes'))
         img.src = e.target?.result as string
@@ -152,6 +178,18 @@ export default function ProtocolView() {
       reader.onerror = () => reject(new Error('Fehler beim Lesen der Datei'))
       reader.readAsDataURL(file)
     })
+  }
+
+  // Delete photo from Supabase Storage (backward-compat: ignore legacy Base64 strings)
+  const deleteStoragePhoto = async (url: string) => {
+    if (!url || url.startsWith('data:')) return
+    try {
+      const marker = '/protocol-images/'
+      const idx = url.indexOf(marker)
+      if (idx === -1) return
+      const path = url.slice(idx + marker.length)
+      await supabase.storage.from('protocol-images').remove([path])
+    } catch { /* non-critical */ }
   }
 
   const handleMeterPhotoUpload = async (file: File, meterId: string) => {
@@ -206,6 +244,10 @@ export default function ProtocolView() {
     saveProtocol({ rooms: updatedRooms })
   }
   const deleteDefectPhoto = (roomId: string, defectId: string, photoIndex: number) => {
+    const room = protocol.rooms.find((r: any) => r.id === roomId)
+    const defect = room?.defects?.find((d: any) => d.id === defectId)
+    const urlToDelete = defect?.photoUrls?.[photoIndex]
+    if (urlToDelete) deleteStoragePhoto(urlToDelete)
     const updatedRooms = protocol.rooms.map((r: any) => r.id === roomId ? { ...r, defects: r.defects.map((d: any) => d.id === defectId ? { ...d, photoUrls: d.photoUrls.filter((_: any, i: number) => i !== photoIndex) } : d) } : r)
     saveProtocol({ rooms: updatedRooms })
   }
@@ -216,6 +258,10 @@ export default function ProtocolView() {
     saveProtocol({ meters: [...(protocol.meters || []), newMeter] })
   }
   const updateMeter = (meterId: string, field: string, value: any) => {
+    if (field === 'photoUrl' && value === '') {
+      const oldUrl = protocol.meters.find((m: any) => m.id === meterId)?.photoUrl
+      if (oldUrl) deleteStoragePhoto(oldUrl)
+    }
     const updatedMeters = protocol.meters.map((m: any) => m.id === meterId ? { ...m, [field]: value } : m)
     saveProtocol({ meters: updatedMeters })
   }
@@ -504,6 +550,12 @@ export default function ProtocolView() {
     return (
       <div className="min-h-screen bg-slate-50 pb-24">
         {/* Header */}
+        {!isOnline && (
+          <div className="sticky top-0 z-30 bg-red-500 text-white text-xs font-medium px-4 py-2 flex items-center gap-2 justify-center">
+            <WifiOff className="h-3.5 w-3.5 shrink-0" />
+            Kein Internet — Änderungen werden derzeit nicht gespeichert
+          </div>
+        )}
         <header className="bg-white shadow-sm sticky top-0 z-20">
           <div className="mx-auto flex h-14 max-w-3xl items-center gap-2 px-4">
             <Button variant="ghost" size="icon" onClick={() => router.push('/dashboard')} className="shrink-0">
