@@ -28,7 +28,12 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
-  const { tenant_salutation, tenant_first_name, tenant_last_name, tenant_email, tenant_phone, street, house_number, zip_code, city } = body
+  const {
+    tenant_salutation, tenant_first_name, tenant_last_name,
+    tenant_email, tenant_phone,
+    tenant_street, tenant_house_number, tenant_zip_code, tenant_city,
+    street, house_number, zip_code, city,
+  } = body
 
   // Create property first
   const fullAddress = `${street} ${house_number}, ${zip_code} ${city}`.trim()
@@ -50,6 +55,10 @@ export async function POST(request: NextRequest) {
       tenant_last_name,
       tenant_email: tenant_email || null,
       tenant_phone: tenant_phone || null,
+      tenant_street: tenant_street || null,
+      tenant_house_number: tenant_house_number || null,
+      tenant_zip_code: tenant_zip_code || null,
+      tenant_city: tenant_city || null,
     })
     .select().single()
 
