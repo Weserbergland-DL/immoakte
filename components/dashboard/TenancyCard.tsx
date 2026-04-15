@@ -79,12 +79,6 @@ function initialsOf(name: string) {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map(s => s[0]?.toUpperCase()).join('') || '–'
 }
 
-function DocIcon({ type }: { type: string }) {
-  const found = DOC_TYPES.find(d => d.type === type)
-  const Icon = found?.icon || FileText
-  return <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-}
-
 interface TenancyCardProps {
   group: TenancyGroup
   userId: string
@@ -264,7 +258,7 @@ export function TenancyCard({ group, userId, onDelete, onDuplicate, onAuszugCrea
             )}
           </div>
           <button
-            className="shrink-0 h-7 w-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center justify-center opacity-0 group-hover/card:opacity-100"
+            className="shrink-0 h-7 w-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover/card:opacity-100"
             title="Mietverhältnis duplizieren"
             onClick={(e) => { e.stopPropagation(); onDuplicate(group) }}
           >
@@ -273,61 +267,50 @@ export function TenancyCard({ group, userId, onDelete, onDuplicate, onAuszugCrea
         </div>
       </div>
 
-      {/* Body */}
-      <div className="flex-1 px-5 py-4 space-y-2">
-        {/* Einzug */}
+      {/*
+        Body — alle Einträge (Einzug, Auszug, Dokumente) werden in der gleichen
+        kompakten Zeilen-Optik gerendert. Früher hatten Einzug/Auszug eine viel
+        dickere Karten-Optik (ProtocolRow mit bg-muted/60 + farbigem Icon-Pill),
+        was neben den schlanken Dokumentenzeilen visuell inkonsistent wirkte.
+      */}
+      <div className="flex-1 px-5 py-4 space-y-0.5">
         {group.einzug && (
-          <ProtocolRow
-            label="Einzug"
+          <ItemRow
             icon={FileText}
-            date={safeFormatDate(group.einzug.date)}
+            label="Einzug"
+            hint={safeFormatDate(group.einzug.date)}
             finalized={!!group.einzug.finalized_at}
             onOpen={() => router.push(`/protocol/${group.einzug!.id}`)}
             onDelete={!group.einzug.finalized_at ? () => onDelete(group.einzug!.id) : undefined}
           />
         )}
         {group.auszug && (
-          <ProtocolRow
-            label="Auszug"
+          <ItemRow
             icon={FileCheck}
-            date={safeFormatDate(group.auszug.date)}
+            label="Auszug"
+            hint={safeFormatDate(group.auszug.date)}
             finalized={!!group.auszug.finalized_at}
             onOpen={() => router.push(`/protocol/${group.auszug!.id}`)}
             onDelete={!group.auszug.finalized_at ? () => onDelete(group.auszug!.id) : undefined}
           />
         )}
 
-        {/* Documents */}
-        {docsLoaded && documents.length > 0 && (
-          <div className="pt-2 mt-2 border-t border-border/60 space-y-0.5">
-            {[...documents]
-              .sort((a, b) => (DOC_TYPE_ORDER[a.type] ?? 99) - (DOC_TYPE_ORDER[b.type] ?? 99))
-              .map(doc => (
-                <div key={doc.id} className="flex items-center group/doc">
-                  <button
-                    className="flex items-center justify-between flex-1 min-w-0 rounded-lg px-2.5 py-1.5 hover:bg-muted transition-colors text-left"
-                    onClick={(e) => { e.stopPropagation(); router.push(`/documents/${doc.id}`) }}
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <DocIcon type={doc.type} />
-                      <span className="text-[13px] text-foreground/80 truncate">{doc.name}</span>
-                    </div>
-                    <Badge variant={doc.finalized_at ? 'final' : 'draft'} size="sm">
-                      {doc.finalized_at ? 'Final' : 'Entwurf'}
-                    </Badge>
-                  </button>
-                  {!doc.finalized_at && (
-                    <button
-                      className="p-1 ml-1 rounded text-muted-foreground hover:text-destructive transition-all opacity-0 group-hover/doc:opacity-100"
-                      onClick={(e) => { e.stopPropagation(); setDocToDelete(doc) }}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-                </div>
-              ))}
-          </div>
-        )}
+        {docsLoaded && documents.length > 0 && [...documents]
+          .sort((a, b) => (DOC_TYPE_ORDER[a.type] ?? 99) - (DOC_TYPE_ORDER[b.type] ?? 99))
+          .map(doc => {
+            const found = DOC_TYPES.find(d => d.type === doc.type)
+            const Icon = found?.icon || FileText
+            return (
+              <ItemRow
+                key={doc.id}
+                icon={Icon}
+                label={doc.name}
+                finalized={!!doc.finalized_at}
+                onOpen={() => router.push(`/documents/${doc.id}`)}
+                onDelete={!doc.finalized_at ? () => setDocToDelete(doc) : undefined}
+              />
+            )
+          })}
       </div>
 
       {/* Add menu — attached to bottom */}
@@ -404,12 +387,17 @@ export function TenancyCard({ group, userId, onDelete, onDuplicate, onAuszugCrea
   )
 }
 
-function ProtocolRow({
-  label, icon: Icon, date, finalized, onOpen, onDelete,
+/**
+ * Einheitliche Zeilen-Optik für alle Akteneinträge (Einzug, Auszug, Dokumente).
+ * Ersetzt die frühere dicke ProtocolRow-Kachel, die neben den schlanken
+ * Dokumentenzeilen visuell aus dem Rahmen fiel.
+ */
+function ItemRow({
+  icon: Icon, label, hint, finalized, onOpen, onDelete,
 }: {
-  label: string
   icon: React.ComponentType<{ className?: string }>
-  date: string
+  label: string
+  hint?: string
   finalized: boolean
   onOpen: () => void
   onDelete?: () => void
@@ -417,30 +405,37 @@ function ProtocolRow({
   return (
     <div className="flex items-center group/row">
       <button
+        className="flex items-center justify-between flex-1 min-w-0 rounded-lg px-2.5 py-1.5 hover:bg-muted transition-colors text-left"
         onClick={(e) => { e.stopPropagation(); onOpen() }}
-        className="flex items-center justify-between flex-1 rounded-lg bg-muted/60 border border-border px-3 py-2.5 hover:bg-muted hover:border-brass-300/60 transition-all"
       >
-        <div className="flex items-center gap-2.5 min-w-0">
-          <span className={cn(
-            'h-7 w-7 rounded-md flex items-center justify-center shrink-0',
-            finalized ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
-                      : 'bg-brass-100 text-brass-700 dark:bg-brass-900/30 dark:text-brass-300'
-          )}>
-            <Icon className="h-3.5 w-3.5" />
+        <div className="flex items-center gap-2 min-w-0">
+          <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          <span className="text-[13px] text-foreground/80 truncate">
+            {label}
+            {hint && <span className="text-muted-foreground font-normal"> · {hint}</span>}
           </span>
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-foreground leading-tight">{label}</p>
-            <p className="text-[11px] text-muted-foreground leading-tight">{date}</p>
-          </div>
         </div>
-        <Badge variant={finalized ? 'final' : 'active'} size="sm">
+        {/*
+          Badge-Wortlaut: einheitlich „Abgeschlossen" (nicht „Final"), damit
+          Dashboard-Card und Tenancy-Detailseite identisch sprechen. Vorher
+          sagten Protokolle „Abgeschlossen", Dokumente aber „Final" —
+          inkonsistent für den Nutzer.
+        */}
+        <Badge variant={finalized ? 'final' : 'draft'} size="sm">
           {finalized ? 'Abgeschlossen' : 'Entwurf'}
         </Badge>
       </button>
       {onDelete && (
+        /*
+          Auf Touch-Geräten (Mobile) gibt es kein Hover — Buttons mit
+          opacity-0 group-hover/row:opacity-100 wären unsichtbar und damit
+          unerreichbar. Daher auf Mobile IMMER sichtbar, ab sm: (≥640px)
+          klassisch mit Hover.
+        */
         <button
-          className="ml-1 p-1.5 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all opacity-0 group-hover/row:opacity-100"
+          className="p-1 ml-1 rounded text-muted-foreground hover:text-destructive transition-all opacity-100 sm:opacity-0 sm:group-hover/row:opacity-100"
           onClick={(e) => { e.stopPropagation(); onDelete() }}
+          aria-label="Eintrag löschen"
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>

@@ -146,7 +146,8 @@ export function RoomsTab({
                 {room.defects?.map((defect: any) => (
                   <div key={defect.id} className="space-y-4 p-4 bg-slate-50 rounded-lg border relative group/defect">
                     <Button variant="ghost" size="icon" onClick={() => deleteDefect(room.id, defect.id)}
-                      className="absolute top-2 right-2 text-destructive opacity-0 group-hover/defect:opacity-100 transition-opacity">
+                      className="absolute top-2 right-2 text-destructive opacity-100 sm:opacity-0 sm:group-hover/defect:opacity-100 transition-opacity"
+                      aria-label="Mangel löschen">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                     <div className="space-y-2">
@@ -166,8 +167,9 @@ export function RoomsTab({
                           <div key={idx} className="relative group/photo aspect-square">
                             <img src={resolveImageUrl(url)} alt="Schaden" className="w-full h-full object-cover rounded border" />
                             <Button variant="destructive" size="icon"
-                              className="absolute -top-1 -right-1 h-5 w-5 rounded-full opacity-0 group-hover/photo:opacity-100 transition-opacity"
-                              onClick={() => deleteDefectPhoto(room.id, defect.id, idx)}>
+                              className="absolute -top-1 -right-1 h-5 w-5 rounded-full opacity-100 sm:opacity-0 sm:group-hover/photo:opacity-100 transition-opacity"
+                              onClick={() => deleteDefectPhoto(room.id, defect.id, idx)}
+                              aria-label="Foto entfernen">
                               <Trash2 className="h-3 w-3" />
                             </Button>
                           </div>

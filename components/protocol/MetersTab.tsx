@@ -130,8 +130,9 @@ export function MetersTab({
                     <img src={resolveImageUrl(meter.photoUrl)} alt="Zählerstand"
                       className="w-full h-full object-cover rounded border" />
                     <Button variant="destructive" size="icon"
-                      className="absolute -top-1 -right-1 h-5 w-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => updateMeter(meter.id, 'photoUrl', '')}>
+                      className="absolute -top-1 -right-1 h-5 w-5 rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                      onClick={() => updateMeter(meter.id, 'photoUrl', '')}
+                      aria-label="Foto entfernen">
                       <Trash2 className="h-3 w-3" />
                     </Button>
                   </div>

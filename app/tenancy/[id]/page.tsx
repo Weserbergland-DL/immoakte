@@ -230,6 +230,25 @@ export default function TenancyPage() {
     toast.success('Dokument gelöscht')
   }
 
+  /**
+   * Protokolle (Einzug/Auszug) haben kein REST-Endpoint — sie werden direkt
+   * über Supabase gelöscht (RLS schützt vor fremden Zugriffen). Ohne diesen
+   * Handler fehlte der Trash-Button in der Akten-Timeline, obwohl er laut
+   * Design für alle Entwurfs-Einträge sichtbar sein muss.
+   */
+  const deleteProtocol = async (protocolId: string) => {
+    const supabase = createClient()
+    const { error } = await supabase.from('protocols').delete().eq('id', protocolId)
+    if (error) { toast.error('Fehler beim Löschen'); return }
+    setItems(prev => prev.filter(i => i.id !== protocolId))
+    toast.success('Protokoll gelöscht')
+  }
+
+  const deleteItem = (item: TenancyItem) => {
+    if (item.kind === 'protocol') return deleteProtocol(item.id)
+    return deleteDocument(item.id)
+  }
+
   const stage = useMemo(() => StageFromItems(items), [items])
 
   if (loading || !tenancy) {
@@ -299,9 +318,9 @@ export default function TenancyPage() {
                     <Badge variant={stage.variant} size="sm">{stage.label}</Badge>
                   </div>
                   <h1 className="font-heading text-2xl md:text-3xl text-foreground leading-tight">{tenantName || 'Unbenanntes Mietverhältnis'}</h1>
-                  <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
-                    <MapPin className="h-3.5 w-3.5 shrink-0" />
-                    <span className="truncate">{address}</span>
+                  <p className="mt-1 flex items-start gap-1.5 text-sm text-muted-foreground">
+                    <MapPin className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                    <span className="break-words">{address}</span>
                   </p>
                 </div>
               </div>
@@ -389,15 +408,22 @@ export default function TenancyPage() {
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium text-foreground text-sm truncate">{item.name}</p>
+                          {/*
+                            Badge wird auf Mobile unter den Namen umgebrochen
+                            (flex-wrap), damit lange Titel wie
+                            „Wohnungsgeberbestätigung" nicht mehr mit … gekürzt
+                            werden. Ab sm: steht der Badge wieder rechts neben
+                            dem Namen (gap-x-2).
+                          */}
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <p className="font-medium text-foreground text-sm break-words">{item.name}</p>
                             {done ? (
                               <Badge variant="final" size="sm">Abgeschlossen</Badge>
                             ) : (
                               <Badge variant="draft" size="sm">Entwurf</Badge>
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                          <p className="text-xs text-muted-foreground mt-0.5 break-words">
                             {cfg?.hint && <span className="mr-2">{cfg.hint}</span>}
                             {done && item.finalized_at && (
                               <span className="text-emerald-700">✓ {safeDate(item.finalized_at)}</span>
@@ -409,11 +435,22 @@ export default function TenancyPage() {
                         <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
                       </button>
 
-                      {item.kind === 'document' && !item.finalized_at && (
+                      {/*
+                        Trash ist für JEDEN Entwurf sichtbar — Dokumente UND
+                        Protokolle. Vorher war die Bedingung auf kind='document'
+                        eingeschränkt, sodass Einzugs-/Auszugsprotokolle
+                        ausschließlich über das Dashboard löschbar waren.
+                      */}
+                      {!item.finalized_at && (
+                        /*
+                          Auf Mobile (ohne Hover) muss der Trash IMMER sichtbar
+                          sein, sonst ist er auf Touch-Geräten unerreichbar.
+                          Ab sm: greift der klassische Hover-Reveal.
+                        */
                         <button
-                          onClick={() => deleteDocument(item.id)}
-                          className="p-2 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover/row:opacity-100 shrink-0"
-                          title="Dokument löschen"
+                          onClick={() => deleteItem(item)}
+                          className="p-2 text-muted-foreground hover:text-destructive transition-colors opacity-100 sm:opacity-0 sm:group-hover/row:opacity-100 shrink-0"
+                          title={item.kind === 'protocol' ? 'Protokoll löschen' : 'Dokument löschen'}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
