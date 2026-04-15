@@ -10,7 +10,7 @@ import { Logo } from '@/components/brand/Logo'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import {
   Plus, LogOut, Settings, ShieldCheck, FileText, Archive, Bookmark,
-  CircleCheck, Clock, Search,
+  CircleCheck, Clock, Search, Download,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
@@ -336,6 +336,43 @@ export default function Dashboard() {
                   </Fieldset>
 
                   <Button onClick={saveSettings} className="w-full h-10">Speichern</Button>
+
+                  {/* DSGVO Art. 15 + 20 — Auskunft und Datenportabilität */}
+                  <div className="pt-6 mt-4 border-t border-border">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brass-600 mb-2">
+                      Datenexport
+                    </p>
+                    <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+                      Lädt alle personenbezogenen Daten, die wir über Sie speichern,
+                      als strukturierte JSON-Datei herunter
+                      (Art. 15 &amp; 20 DSGVO).
+                    </p>
+                    <Button
+                      variant="outline"
+                      className="w-full h-10"
+                      onClick={async () => {
+                        try {
+                          const res = await fetch('/api/account/export')
+                          if (!res.ok) throw new Error('Export fehlgeschlagen')
+                          const blob = await res.blob()
+                          const url = URL.createObjectURL(blob)
+                          const a = document.createElement('a')
+                          a.href = url
+                          a.download = `immoakte-datenexport-${new Date().toISOString().slice(0, 10)}.json`
+                          document.body.appendChild(a)
+                          a.click()
+                          a.remove()
+                          URL.revokeObjectURL(url)
+                          toast.success('Export wurde heruntergeladen.')
+                        } catch (err: any) {
+                          toast.error(err.message || 'Fehler beim Export')
+                        }
+                      }}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Meine Daten herunterladen
+                    </Button>
+                  </div>
 
                   {/* DSGVO Art. 17 — Recht auf Löschung (Danger Zone) */}
                   <div className="pt-6 mt-4 border-t border-border">

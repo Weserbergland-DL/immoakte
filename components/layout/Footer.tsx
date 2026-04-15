@@ -16,6 +16,8 @@ const COLS: { title: string; links: { label: string; href: string; external?: bo
       { label: 'Impressum', href: '/impressum' },
       { label: 'Datenschutz', href: '/datenschutz' },
       { label: 'AGB', href: '/agb' },
+      { label: 'Widerruf', href: '/widerruf' },
+      { label: 'Auftragsverarbeitung', href: '/auftragsverarbeitung' },
     ],
   },
   {

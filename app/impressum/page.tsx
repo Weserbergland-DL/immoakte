@@ -42,7 +42,7 @@ export default function Impressum() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
             <p>
               Özgür Tikiz<br />
               Chamissostraße 23<br />

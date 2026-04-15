@@ -75,7 +75,58 @@ export default function Datenschutz() {
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-3">5. Speicherdauer</h2>
             <p>
-              Personenbezogene Daten werden nur so lange gespeichert, wie es für den jeweiligen Zweck erforderlich ist oder gesetzliche Aufbewahrungspflichten bestehen (z. B. 10 Jahre für steuerrelevante Unterlagen gemäß § 147 AO). Nutzer können ihr Konto jederzeit selbst über ihre Stammdaten dauerhaft löschen; dabei werden alle zugehörigen Mietverhältnisse, Dokumente und Protokolle unwiderruflich entfernt (Art. 17 DSGVO). Server-Logs (Zugriffsprotokolle mit IP und Zeitstempel) werden nach 30 Tagen automatisch verworfen.
+              Personenbezogene Daten werden nur so lange gespeichert, wie es für den jeweiligen Zweck erforderlich ist oder gesetzliche Aufbewahrungspflichten bestehen. Im Einzelnen gelten folgende Fristen:
+            </p>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-border text-left text-foreground">
+                    <th className="py-2 pr-4 font-semibold">Datenkategorie</th>
+                    <th className="py-2 pr-4 font-semibold">Dauer</th>
+                    <th className="py-2 font-semibold">Grundlage</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  <tr>
+                    <td className="py-2 pr-4">Konto- und Profildaten</td>
+                    <td className="py-2 pr-4">bis zur Löschung des Kontos</td>
+                    <td className="py-2">Art. 6 Abs. 1 lit. b DSGVO</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 pr-4">Mietverhältnisse, Dokumente, Protokolle</td>
+                    <td className="py-2 pr-4">bis zur Löschung durch Nutzer</td>
+                    <td className="py-2">Art. 6 Abs. 1 lit. b DSGVO</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 pr-4">Rechnungs- und Zahlungsdaten</td>
+                    <td className="py-2 pr-4">10 Jahre</td>
+                    <td className="py-2">§ 147 AO, § 257 HGB</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 pr-4">Vertragskorrespondenz (E-Mail)</td>
+                    <td className="py-2 pr-4">6 Jahre</td>
+                    <td className="py-2">§ 257 HGB</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 pr-4">Consent-Nachweis (terms_accepted_at)</td>
+                    <td className="py-2 pr-4">bis zur Löschung des Kontos</td>
+                    <td className="py-2">Art. 7 DSGVO</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 pr-4">Server-Logs (Zugriffsprotokolle)</td>
+                    <td className="py-2 pr-4">30 Tage</td>
+                    <td className="py-2">Art. 6 Abs. 1 lit. f DSGVO</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 pr-4">Datenbank-Backups (Supabase)</td>
+                    <td className="py-2 pr-4">max. 7 Tage nach Kontolöschung</td>
+                    <td className="py-2">Art. 32 DSGVO</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-3">
+              Nutzer können ihr Konto jederzeit über ihre Stammdaten selbst löschen (Art. 17 DSGVO). Dabei werden alle zugehörigen Produktivdaten unwiderruflich entfernt; Backup-Restbestände erlöschen im normalen Rotationszyklus.
             </p>
           </section>
 
