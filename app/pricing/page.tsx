@@ -10,6 +10,7 @@ import Footer from '@/components/layout/Footer'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { CheckoutConfirmDialog } from '@/components/checkout/CheckoutConfirmDialog'
 
 const FEATURES_ALL = [
   'Mietverhältnisse verwalten',
@@ -118,20 +119,31 @@ export default function Pricing() {
   const { user } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
+  // Confirm-Dialog-State: erst Checkbox-Zustimmung, dann Stripe-Redirect.
+  // Ohne diesen Zwischenschritt wäre weder die Button-Lösung (§ 312j BGB)
+  // noch der Widerrufsverzicht (§ 356 Abs. 5 BGB) erfüllt.
+  const [pendingPlan, setPendingPlan] = useState<(typeof PLANS)[number] | null>(null)
 
-  const handleSubscribe = async (priceKey: string, mode: 'payment' | 'subscription') => {
+  // Schritt 1: Nutzer klickt auf einen Tarif → Dialog öffnen.
+  const handlePlanClick = (plan: (typeof PLANS)[number]) => {
     if (!user) {
       toast.error('Bitte melden Sie sich an, um ein Paket zu buchen.')
       router.push('/login')
       return
     }
-    const priceId = process.env[priceKey as keyof typeof process.env] as string
+    setPendingPlan(plan)
+  }
+
+  // Schritt 2: Dialog bestätigt → Stripe-Checkout-Session anlegen und weiterleiten.
+  const handleConfirmedSubscribe = async () => {
+    if (!pendingPlan?.priceKey || !pendingPlan.mode) return
+    const priceId = process.env[pendingPlan.priceKey as keyof typeof process.env] as string
     try {
-      setLoading(priceKey)
+      setLoading(pendingPlan.priceKey)
       const response = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priceId, mode }),
+        body: JSON.stringify({ priceId, mode: pendingPlan.mode }),
       })
       const data = await response.json()
       if (data.beta) { router.push('/beta'); return }
@@ -139,9 +151,10 @@ export default function Pricing() {
       if (data.url) window.location.href = data.url
     } catch (error: any) {
       toast.error(error.message || 'Fehler beim Weiterleiten zu Stripe.')
-    } finally {
       setLoading(null)
     }
+    // loading wird absichtlich nicht zurückgesetzt, wenn redirect erfolgt —
+    // die Seite wird ohnehin verlassen.
   }
 
   return (
@@ -251,7 +264,7 @@ export default function Pricing() {
                       <Button
                         variant={plan.ctaVariant}
                         className="w-full"
-                        onClick={() => plan.priceKey && plan.mode && handleSubscribe(plan.priceKey, plan.mode)}
+                        onClick={() => handlePlanClick(plan)}
                         disabled={loading === plan.priceKey}
                       >
                         {loading === plan.priceKey ? 'Lädt…' : plan.cta}
@@ -287,6 +300,21 @@ export default function Pricing() {
         </section>
       </main>
       <Footer />
+
+      {/* Confirm-Dialog vor Stripe-Weiterleitung.
+          Erfüllt § 312j BGB (Button-Lösung) und § 356 Abs. 5 BGB (Widerrufsverzicht). */}
+      <CheckoutConfirmDialog
+        plan={pendingPlan ? {
+          name: pendingPlan.name,
+          price: pendingPlan.price,
+          period: pendingPlan.period,
+          mode: pendingPlan.mode ?? 'subscription',
+        } : null}
+        open={pendingPlan !== null}
+        onOpenChange={(open) => { if (!open) setPendingPlan(null) }}
+        onConfirm={handleConfirmedSubscribe}
+        loading={loading !== null}
+      />
     </div>
   )
 }
