@@ -53,12 +53,12 @@ export default function Datenschutz() {
 
             <h3 className="font-semibold mt-4 mb-1">Supabase (Datenbank & Authentifizierung)</h3>
             <p>
-              Wir nutzen Supabase (Supabase Inc., 970 Trestle Glen Rd, Oakland, CA 94610, USA) zur Speicherung von Nutzerdaten, Protokolldaten und Fotos sowie zur Authentifizierung. Die Datenübertragung erfolgt auf Basis der EU-Standardvertragsklauseln. Datenschutzerklärung: <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">supabase.com/privacy</a>
+              Wir nutzen Supabase (Supabase Inc., 970 Trestle Glen Rd, Oakland, CA 94610, USA) zur Speicherung von Nutzer-, Protokoll- und Dokumentdaten sowie zur Authentifizierung. Unsere Datenbank-Instanz ist in der Region <strong>Central EU (Frankfurt am Main)</strong> gehostet – sämtliche Inhaltsdaten verbleiben innerhalb der EU. Mit Supabase haben wir einen Auftragsverarbeitungsvertrag nach Art. 28 DSGVO geschlossen. Datenschutzerklärung: <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">supabase.com/privacy</a>
             </p>
 
             <h3 className="font-semibold mt-4 mb-1">Vercel (Hosting)</h3>
             <p>
-              Die Plattform wird gehostet bei Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, USA. Vercel verarbeitet technische Zugriffsdaten (IP-Adresse, Zeitstempel) im Rahmen des Hostings. Datenschutzerklärung: <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">vercel.com/legal/privacy-policy</a>
+              Die Plattform wird bei Vercel Inc. (340 S Lemon Ave #4133, Walnut, CA 91789, USA) gehostet. Unsere Serverless-Funktionen sind auf die Region <strong>Frankfurt am Main (fra1)</strong> festgelegt – Anfragen und deren Verarbeitung erfolgen also innerhalb der EU. Vercel verarbeitet dabei technische Zugriffsdaten (IP-Adresse, Zeitstempel, User-Agent). Mit Vercel haben wir einen Auftragsverarbeitungsvertrag nach Art. 28 DSGVO geschlossen. Datenschutzerklärung: <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">vercel.com/legal/privacy-policy</a>
             </p>
 
             <h3 className="font-semibold mt-4 mb-1">Stripe (Zahlungsabwicklung)</h3>
@@ -75,7 +75,7 @@ export default function Datenschutz() {
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-3">5. Speicherdauer</h2>
             <p>
-              Personenbezogene Daten werden nur so lange gespeichert, wie es für den jeweiligen Zweck erforderlich ist oder gesetzliche Aufbewahrungspflichten bestehen (z. B. 10 Jahre für steuerrelevante Unterlagen gemäß § 147 AO). Kontodaten werden bei Kündigung des Nutzerkontos auf Anfrage gelöscht.
+              Personenbezogene Daten werden nur so lange gespeichert, wie es für den jeweiligen Zweck erforderlich ist oder gesetzliche Aufbewahrungspflichten bestehen (z. B. 10 Jahre für steuerrelevante Unterlagen gemäß § 147 AO). Nutzer können ihr Konto jederzeit selbst über ihre Stammdaten dauerhaft löschen; dabei werden alle zugehörigen Mietverhältnisse, Dokumente und Protokolle unwiderruflich entfernt (Art. 17 DSGVO). Server-Logs (Zugriffsprotokolle mit IP und Zeitstempel) werden nach 30 Tagen automatisch verworfen.
             </p>
           </section>
 
@@ -99,14 +99,28 @@ export default function Datenschutz() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">7. Cookies</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">7. Cookies & lokaler Speicher</h2>
             <p>
-              ImmoAkte verwendet technisch notwendige Cookies ausschließlich zur Aufrechterhaltung der Nutzersitzung (Session-Cookie). Es werden keine Tracking- oder Werbe-Cookies eingesetzt. Eine gesonderte Einwilligung ist für technisch notwendige Cookies nicht erforderlich.
+              ImmoAkte verwendet ausschließlich technisch notwendige Cookies und lokalen Browserspeicher für:
+            </p>
+            <ul className="list-disc pl-5 mt-2 space-y-1">
+              <li><strong>Nutzersitzung</strong> (Supabase-Auth-Cookies): Aufrechterhaltung der Anmeldung</li>
+              <li><strong>Theme-Einstellung</strong> (LocalStorage): Hell-/Dunkelmodus-Präferenz</li>
+            </ul>
+            <p className="mt-3">
+              Diese Cookies fallen unter die Ausnahme des § 25 Abs. 2 Nr. 2 TDDDG (unbedingt erforderlich) – eine Einwilligung ist nicht erforderlich. Wir setzen <strong>keine</strong> Tracking-, Analyse- oder Werbe-Cookies ein, insbesondere kein Google Analytics, keine Social-Media-Pixel und keine Drittanbieter-Reichweitenmessung.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">8. Datensicherheit</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">8. Einwilligung bei Registrierung</h2>
+            <p>
+              Bei der Registrierung wird Ihre ausdrückliche Zustimmung zu unseren AGB und zur Kenntnisnahme dieser Datenschutzerklärung erfasst. Der Zeitpunkt der Zustimmung sowie die akzeptierte Version werden zum Nachweis nach Art. 7 DSGVO in Ihrem Benutzerprofil gespeichert.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-foreground mb-3">9. Datensicherheit</h2>
             <p>
               Alle Datenübertragungen erfolgen verschlüsselt über HTTPS/TLS. Datenbankzugriffe sind durch Row-Level-Security (RLS) auf Supabase abgesichert – jeder Nutzer sieht ausschließlich eigene Daten. Zahlungsdaten werden nicht auf unseren Servern gespeichert.
             </p>

@@ -69,11 +69,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   const signUpWithEmail = async (email: string, password: string, name: string) => {
+    // terms_accepted_at: Zeitstempel der AGB/Datenschutz-Zustimmung (Art. 7 DSGVO
+    // verlangt Nachweisbarkeit). Wird in auth.users.raw_user_meta_data persistiert
+    // und kann bei Bedarf vom DB-Trigger `handle_new_user` in die users-Tabelle
+    // kopiert werden.
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { name },
+        data: {
+          name,
+          terms_accepted_at: new Date().toISOString(),
+          terms_version: '2026-04-15',
+        },
         emailRedirectTo: `${window.location.origin}/login`,
       },
     })

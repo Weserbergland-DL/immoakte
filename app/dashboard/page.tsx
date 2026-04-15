@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { TenancyCard } from '@/components/dashboard/TenancyCard'
+import { DeleteAccountDialog } from '@/components/account/DeleteAccountDialog'
 import { cn } from '@/lib/utils'
 
 interface Protocol {
@@ -335,6 +336,19 @@ export default function Dashboard() {
                   </Fieldset>
 
                   <Button onClick={saveSettings} className="w-full h-10">Speichern</Button>
+
+                  {/* DSGVO Art. 17 — Recht auf Löschung (Danger Zone) */}
+                  <div className="pt-6 mt-4 border-t border-border">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-destructive mb-2">
+                      Konto löschen
+                    </p>
+                    <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+                      Löscht Ihr Konto und alle zugehörigen Daten (Mietverhältnisse,
+                      Dokumente, Protokolle) unwiderruflich. Diese Aktion kann nicht
+                      rückgängig gemacht werden.
+                    </p>
+                    {user?.email && <DeleteAccountDialog userEmail={user.email} />}
+                  </div>
                 </div>
               </DialogContent>
             </Dialog>

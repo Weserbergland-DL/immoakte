@@ -22,6 +22,10 @@ function LoginForm() {
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  // AGB/Datenschutz-Zustimmung — nur für Sign-Up, nicht für Login.
+  // Pflicht nach §305 BGB (AGB-Einbeziehung) + Art. 6 DSGVO
+  // (informierte Einwilligung, nicht voreingestellt).
+  const [termsAccepted, setTermsAccepted] = useState(false)
 
   useEffect(() => {
     if (user) router.replace('/dashboard')
@@ -41,6 +45,10 @@ function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isSignUp && !termsAccepted) {
+      toast.error('Bitte stimmen Sie den AGB und der Datenschutzerklärung zu.')
+      return
+    }
     setLoading(true)
     try {
       if (isSignUp) {
@@ -128,7 +136,25 @@ function LoginForm() {
                   </button>
                 </div>
               </div>
-              <Button className="w-full h-11 text-base" type="submit" disabled={loading}>
+              {isSignUp && (
+                <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={termsAccepted}
+                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-border text-brass-600 focus:ring-2 focus:ring-brass-400 cursor-pointer"
+                    aria-label="AGB und Datenschutzerklärung akzeptieren"
+                  />
+                  <span className="text-xs text-muted-foreground leading-relaxed">
+                    Ich akzeptiere die{' '}
+                    <Link href="/agb" target="_blank" className="text-brass-700 hover:underline">AGB</Link>
+                    {' '}und habe die{' '}
+                    <Link href="/datenschutz" target="_blank" className="text-brass-700 hover:underline">Datenschutzerklärung</Link>
+                    {' '}zur Kenntnis genommen.
+                  </span>
+                </label>
+              )}
+              <Button className="w-full h-11 text-base" type="submit" disabled={loading || (isSignUp && !termsAccepted)}>
                 {loading ? 'Lädt…' : (isSignUp ? 'Registrieren' : 'Anmelden')}
               </Button>
             </form>
