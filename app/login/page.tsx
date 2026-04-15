@@ -46,8 +46,12 @@ function LoginForm() {
       if (isSignUp) {
         await signUpWithEmail(email, password, name)
         toast.success('Registrierung erfolgreich! Bitte prüfen Sie Ihr E-Mail-Postfach zur Verifizierung.', { duration: 10000 })
+        setLoading(false)
       } else {
         await signInWithEmail(email, password)
+        // Navigation handled by the useEffect above (user → /dashboard).
+        // Reset loading so the button doesn't stay stuck if the redirect is slow.
+        setLoading(false)
       }
     } catch (err: any) {
       toast.error(err.message || 'Fehler bei der Anmeldung')
@@ -96,13 +100,12 @@ function LoginForm() {
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Passwort</Label>
                   {!isSignUp && (
-                    <button
-                      type="button"
+                    <Link
+                      href="/forgot-password"
                       className="text-xs text-brass-700 hover:text-brass-800 hover:underline"
-                      onClick={() => toast.info('Passwort-Reset kommt bald.')}
                     >
                       Vergessen?
-                    </button>
+                    </Link>
                   )}
                 </div>
                 <div className="relative">
