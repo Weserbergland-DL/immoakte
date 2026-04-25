@@ -105,7 +105,7 @@ const SCREENS: Screen[] = [
   },
 ]
 
-/** Hero-Phone das alle ~5.5s zwischen 3 App-Screens crossfadet.
+/** Hero-Phone das alle ~3s zwischen 3 App-Screens crossfadet.
  *  Zwei Annotation-Pills pro Screen, jede an einer anderen Position. */
 export function HeroPhoneCarousel() {
   const [index, setIndex] = useState(0)
@@ -121,7 +121,9 @@ export function HeroPhoneCarousel() {
 
   useEffect(() => {
     if (reducedMotion) return
-    const id = setInterval(() => setIndex(i => (i + 1) % SCREENS.length), 5500)
+    // Von 5500ms auf 3000ms beschleunigt — Carousel-Wechsel fühlt sich
+    // jetzt deutlich zügiger an, Annotation-Pills bleiben lesbar.
+    const id = setInterval(() => setIndex(i => (i + 1) % SCREENS.length), 3000)
     return () => clearInterval(id)
   }, [reducedMotion])
 
@@ -140,7 +142,7 @@ export function HeroPhoneCarousel() {
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 1.01 }}
-              transition={{ duration: 0.5, ease: 'easeOut' }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
               className="h-full w-full"
             >
               {active.node}
@@ -166,7 +168,7 @@ export function HeroPhoneCarousel() {
             onClick={() => setIndex(i)}
             aria-label={`Screen ${s.label} anzeigen`}
             className={
-              'h-1.5 rounded-full transition-all duration-500 ' +
+              'h-1.5 rounded-full transition-all duration-300 ' +
               (i === index ? 'w-8 bg-brass-500' : 'w-1.5 bg-muted-foreground/30 hover:bg-muted-foreground/60')
             }
           />
@@ -204,10 +206,12 @@ function AnimationPill({
   useEffect(() => {
     if (annotation.label === displayed.label) return
     setIsVisible(false)
+    // Fade-out → swap → fade-in: von 400ms auf 250ms verkürzt, passt zum
+    // schnelleren 3s-Carousel-Rhythmus ohne abzuschneiden.
     const t = setTimeout(() => {
       setDisplayed(annotation)
       requestAnimationFrame(() => setIsVisible(true))
-    }, 400)
+    }, 250)
     return () => clearTimeout(t)
   }, [annotation, displayed.label])
 
@@ -219,7 +223,7 @@ function AnimationPill({
     <div
       className={
         'absolute flex items-center gap-2 bg-card border border-border rounded-full px-3 py-1.5 whitespace-nowrap ' +
-        'transition-opacity duration-500 ' +
+        'transition-opacity duration-300 ' +
         (isVisible ? 'opacity-100 ' : 'opacity-0 ') +
         floatClass
       }
