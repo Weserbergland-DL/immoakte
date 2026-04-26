@@ -5,9 +5,7 @@ const COLS: { title: string; links: { label: string; href: string; external?: bo
   {
     title: 'Produkt',
     links: [
-      { label: 'Preise', href: '/pricing' },
-      { label: 'Registrieren', href: '/login?mode=signup' },
-      { label: 'Anmelden', href: '/login' },
+      { label: 'Dashboard', href: '/dashboard' },
     ],
   },
   {
@@ -15,9 +13,6 @@ const COLS: { title: string; links: { label: string; href: string; external?: bo
     links: [
       { label: 'Impressum', href: '/impressum' },
       { label: 'Datenschutz', href: '/datenschutz' },
-      { label: 'AGB', href: '/agb' },
-      { label: 'Widerruf', href: '/widerruf' },
-      { label: 'Auftragsverarbeitung', href: '/auftragsverarbeitung' },
     ],
   },
   {

@@ -7,10 +7,8 @@ import {
   Sparkles, Home as HomeIcon, Key, Zap, FileText, CheckCircle2,
   Smartphone, Lock, Download,
 } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
-import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { HeroPhoneCarousel } from '@/components/brand/HeroPhoneCarousel'
 import { Reveal, RevealStagger, RevealItem } from '@/components/brand/Reveal'
@@ -18,15 +16,6 @@ import { motion, useInView } from 'motion/react'
 import { Badge } from '@/components/ui/badge'
 
 export default function Landing() {
-  const { user, loading } = useAuth()
-  const router = useRouter()
-
-  useEffect(() => {
-    if (!loading && user) router.replace('/dashboard')
-  }, [user, loading, router])
-
-  if (user) return null
-
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
@@ -94,15 +83,10 @@ function Hero() {
               transition={{ duration: 0.5, delay: 0.32 }}
               className="mt-9 flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
             >
-              <Link href="/login?mode=signup">
+              <Link href="/dashboard">
                 <Button size="lg" className="h-12 px-6 text-[15px] shadow-ink hover:shadow-lg transition-shadow">
-                  Kostenlos starten
+                  Jetzt loslegen
                   <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-              <Link href="/pricing">
-                <Button variant="outline" size="lg" className="h-12 px-6 text-[15px]">
-                  Preise ansehen
                 </Button>
               </Link>
             </motion.div>
@@ -745,16 +729,11 @@ function FinalCTA() {
             <p className="mt-5 text-base sm:text-lg text-background/75 max-w-xl mx-auto leading-relaxed">
               Legen Sie Ihr erstes Mietverhältnis an und erstellen Sie alle Dokumente noch heute – ohne Kreditkarte, ohne Abo.
             </p>
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link href="/login?mode=signup">
+            <div className="mt-10 flex justify-center">
+              <Link href="/dashboard">
                 <Button size="lg" className="h-12 px-7 bg-brass-400 text-ink-900 hover:bg-brass-300 shadow-brass text-[15px] font-semibold">
-                  Jetzt kostenlos starten
+                  Jetzt loslegen
                   <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-              <Link href="/pricing">
-                <Button variant="ghost" size="lg" className="h-12 px-6 text-background hover:bg-background/10 text-[15px]">
-                  Preise ansehen
                 </Button>
               </Link>
             </div>

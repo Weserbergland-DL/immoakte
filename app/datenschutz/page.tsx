@@ -1,5 +1,10 @@
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
+import { ConsentControls } from '@/components/CookieConsent'
+
+export const metadata = {
+  title: 'Datenschutzerklärung — ImmoAkte',
+}
 
 export default function Datenschutz() {
   return (
@@ -12,169 +17,203 @@ export default function Datenschutz() {
         <div className="space-y-8 text-muted-foreground text-sm leading-relaxed">
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">1. Verantwortlicher</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">
+              1. Verantwortlicher
+            </h2>
             <p>
-              Verantwortlicher im Sinne der DSGVO für die Verarbeitung personenbezogener Daten auf dieser Plattform ist:
+              Verantwortlicher im Sinne der DSGVO für diese Anwendung ist:
             </p>
             <p className="mt-2">
               Weserbergland Dienstleistungen<br />
               Inhaber: Özgür Tikiz<br />
               Chamissostraße 23, 31785 Hameln<br />
-              E-Mail: <a href="mailto:info@weserbergland-dienstleistungen.de" className="text-primary hover:underline">info@weserbergland-dienstleistungen.de</a><br />
+              E-Mail:{' '}
+              <a
+                href="mailto:info@weserbergland-dienstleistungen.de"
+                className="text-primary hover:underline"
+              >
+                info@weserbergland-dienstleistungen.de
+              </a>
+              <br />
               Telefon: +49 5151 7103786
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">2. Welche Daten wir verarbeiten</h2>
-            <p>Im Rahmen der Nutzung von ImmoAkte verarbeiten wir folgende Kategorien personenbezogener Daten:</p>
-            <ul className="list-disc pl-5 mt-2 space-y-1">
-              <li><strong>Kontodaten:</strong> Name, E-Mail-Adresse</li>
-              <li><strong>Protokolldaten:</strong> Namen, Anschriften und Kontaktdaten von Mietern und Vermietern, Adresse der Immobilie</li>
-              <li><strong>Dokumentationsdaten:</strong> Raumzustände, Zählerstände, Schlüsselübergaben, Fotos von Mängeln und Zählern</li>
-              <li><strong>Unterschriften:</strong> Digitale Signaturen der beteiligten Parteien (als Bilddaten gespeichert)</li>
-              <li><strong>Technische Daten:</strong> IP-Adresse, Browser-Typ, Zugriffszeiten (serverseitige Logs)</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">3. Rechtsgrundlagen der Verarbeitung</h2>
-            <p>Wir verarbeiten personenbezogene Daten auf Basis folgender Rechtsgrundlagen gemäß DSGVO:</p>
-            <ul className="list-disc pl-5 mt-2 space-y-1">
-              <li><strong>Art. 6 Abs. 1 lit. b DSGVO</strong> – Vertragserfüllung: Verarbeitung zur Bereitstellung der gebuchten Leistungen</li>
-              <li><strong>Art. 6 Abs. 1 lit. a DSGVO</strong> – Einwilligung: z. B. bei der Registrierung per Google OAuth</li>
-              <li><strong>Art. 6 Abs. 1 lit. c DSGVO</strong> – Rechtliche Verpflichtung: z. B. steuerrechtliche Aufbewahrungspflichten</li>
-              <li><strong>Art. 6 Abs. 1 lit. f DSGVO</strong> – Berechtigte Interessen: Sicherheit und Missbrauchsschutz der Plattform</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">4. Lokale Speicherung &amp; Drittdienstleister</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">
+              2. Wie ImmoAkte funktioniert (Kurzfassung)
+            </h2>
             <p>
-              ImmoAkte ist in der aktuellen Version eine reine Browser-Anwendung.
-              Sämtliche Inhaltsdaten (Mietverhältnisse, Protokolle, Dokumente,
-              Vorlagen, Stammdaten) werden ausschließlich im{' '}
-              <strong>localStorage Ihres Browsers</strong> gespeichert. Es findet
-              <strong> keine Übertragung an Dritte</strong> statt: kein
-              Authentifizierungsanbieter, keine Datenbank, kein Zahlungsdienstleister,
-              kein Tracking. Ein Auftragsverarbeitungsvertrag nach Art. 28 DSGVO
-              ist daher nicht erforderlich, da keine personenbezogenen Daten an
-              Auftragsverarbeiter übermittelt werden.
-            </p>
-            <h3 className="font-semibold mt-4 mb-1">Vercel (Hosting der statischen Anwendung)</h3>
-            <p>
-              Die statische Web-App wird bei Vercel Inc. ausgeliefert. Beim Aufruf
-              werden technische Zugriffsdaten (IP-Adresse, Zeitstempel, User-Agent)
-              kurzzeitig verarbeitet. Inhaltsdaten verlassen den Browser nicht.
-              Datenschutzerklärung: <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">vercel.com/legal/privacy-policy</a>
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">5. Speicherdauer</h2>
-            <p>
-              Personenbezogene Daten werden nur so lange gespeichert, wie es für den jeweiligen Zweck erforderlich ist oder gesetzliche Aufbewahrungspflichten bestehen. Im Einzelnen gelten folgende Fristen:
-            </p>
-            <div className="mt-3 overflow-x-auto">
-              <table className="w-full text-xs border-collapse">
-                <thead>
-                  <tr className="border-b border-border text-left text-foreground">
-                    <th className="py-2 pr-4 font-semibold">Datenkategorie</th>
-                    <th className="py-2 pr-4 font-semibold">Dauer</th>
-                    <th className="py-2 font-semibold">Grundlage</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  <tr>
-                    <td className="py-2 pr-4">Konto- und Profildaten</td>
-                    <td className="py-2 pr-4">bis zur Löschung des Kontos</td>
-                    <td className="py-2">Art. 6 Abs. 1 lit. b DSGVO</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 pr-4">Mietverhältnisse, Dokumente, Protokolle</td>
-                    <td className="py-2 pr-4">bis zur Löschung durch Nutzer</td>
-                    <td className="py-2">Art. 6 Abs. 1 lit. b DSGVO</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 pr-4">Rechnungs- und Zahlungsdaten</td>
-                    <td className="py-2 pr-4">10 Jahre</td>
-                    <td className="py-2">§ 147 AO, § 257 HGB</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 pr-4">Vertragskorrespondenz (E-Mail)</td>
-                    <td className="py-2 pr-4">6 Jahre</td>
-                    <td className="py-2">§ 257 HGB</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 pr-4">Consent-Nachweis (terms_accepted_at)</td>
-                    <td className="py-2 pr-4">bis zur Löschung des Kontos</td>
-                    <td className="py-2">Art. 7 DSGVO</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 pr-4">Server-Logs (Zugriffsprotokolle)</td>
-                    <td className="py-2 pr-4">30 Tage</td>
-                    <td className="py-2">Art. 6 Abs. 1 lit. f DSGVO</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 pr-4">Datenbank-Backups (Supabase)</td>
-                    <td className="py-2 pr-4">max. 7 Tage nach Kontolöschung</td>
-                    <td className="py-2">Art. 32 DSGVO</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <p className="mt-3">
-              Nutzer können ihr Konto jederzeit über ihre Stammdaten selbst löschen (Art. 17 DSGVO). Dabei werden alle zugehörigen Produktivdaten unwiderruflich entfernt; Backup-Restbestände erlöschen im normalen Rotationszyklus.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">6. Ihre Rechte</h2>
-            <p>Sie haben gemäß Art. 15–22 DSGVO folgende Rechte:</p>
-            <ul className="list-disc pl-5 mt-2 space-y-1">
-              <li><strong>Auskunft</strong> (Art. 15) – Welche Daten wir über Sie verarbeiten</li>
-              <li><strong>Berichtigung</strong> (Art. 16) – Korrektur unrichtiger Daten</li>
-              <li><strong>Löschung</strong> (Art. 17) – „Recht auf Vergessenwerden"</li>
-              <li><strong>Einschränkung</strong> (Art. 18) – Einschränkung der Verarbeitung</li>
-              <li><strong>Datenübertragbarkeit</strong> (Art. 20) – Daten in maschinenlesbarem Format</li>
-              <li><strong>Widerspruch</strong> (Art. 21) – Widerspruch gegen Verarbeitung</li>
-            </ul>
-            <p className="mt-3">
-              Zur Ausübung Ihrer Rechte wenden Sie sich an: <a href="mailto:info@weserbergland-dienstleistungen.de" className="text-primary hover:underline">info@weserbergland-dienstleistungen.de</a>
+              ImmoAkte ist eine offene Test-Anwendung für Vermieter. Die App
+              speichert <strong>alle inhaltlichen Daten ausschließlich lokal in
+              deinem Browser</strong> (im sogenannten <em>localStorage</em>) —
+              also Mietverhältnisse, Übergabeprotokolle, Mietverträge,
+              Fotos, Unterschriften, Zählerstände und alle Stammdaten, die du
+              eingibst.
             </p>
             <p className="mt-2">
-              Sie haben außerdem das Recht, sich bei der zuständigen Datenschutzaufsichtsbehörde zu beschweren. In Niedersachsen: <a href="https://www.lfd.niedersachsen.de" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">www.lfd.niedersachsen.de</a>
+              Es gibt <strong>kein Login</strong>, <strong>keine Cloud-Datenbank</strong>,
+              <strong> keinen Server</strong>, der deine Inhalte sieht oder
+              speichert. Wir können deine Daten weder lesen noch wiederherstellen
+              — wenn du den Browser-Speicher löschst, sind sie weg.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">7. Cookies & lokaler Speicher</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">
+              3. Hosting (Vercel)
+            </h2>
             <p>
-              ImmoAkte verwendet ausschließlich technisch notwendige Cookies und lokalen Browserspeicher für:
+              Die App wird über{' '}
+              <strong>Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, USA</strong>{' '}
+              ausgeliefert. Beim Aufruf der Seite werden technisch
+              unvermeidbare Server-Logs erfasst (IP-Adresse, User-Agent,
+              Zeitstempel, angeforderte URL). Rechtsgrundlage:
+              Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse am sicheren
+              Betrieb der Seite). Mit Vercel besteht ein
+              Auftragsverarbeitungsvertrag inkl. EU-Standardvertragsklauseln.
+              Datenschutz-Info:{' '}
+              <a
+                href="https://vercel.com/legal/privacy-policy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                vercel.com/legal/privacy-policy
+              </a>
+              .
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-foreground mb-3">
+              4. Google Analytics 4 (nur mit deiner Einwilligung)
+            </h2>
+            <p>
+              Wir setzen <strong>Google Analytics 4</strong> ein, um zu
+              verstehen, welche Funktionen genutzt werden und wo es Probleme
+              gibt. Das geschieht <strong>ausschließlich, wenn du im
+              Cookie-Banner aktiv zustimmst</strong>. Vor der Zustimmung wird
+              kein Google-Skript geladen, kein Cookie gesetzt und kein Request
+              an Google gesendet.
+            </p>
+            <p className="mt-2">
+              Anbieter ist <strong>Google Ireland Limited, Gordon House,
+              Barrow Street, Dublin 4, Irland</strong>. Daten werden an
+              Google-Server (auch in den USA) übertragen. Bei zugestimmter
+              Nutzung verarbeitet Google in unserem Auftrag aggregierte
+              Nutzungsdaten:
             </p>
             <ul className="list-disc pl-5 mt-2 space-y-1">
-              <li><strong>Nutzersitzung</strong> (Supabase-Auth-Cookies): Aufrechterhaltung der Anmeldung</li>
-              <li><strong>Theme-Einstellung</strong> (LocalStorage): Hell-/Dunkelmodus-Präferenz</li>
+              <li>Anonymisierte IP-Adresse (IP-Anonymisierung ist GA4-Default)</li>
+              <li>Geräte- und Browser-Typ, Bildschirmgröße, Sprache</li>
+              <li>Aufgerufene Seiten + Zeitpunkte</li>
+              <li>Cookies wie <code>_ga</code> und <code>_ga_&lt;ID&gt;</code> zur
+                Wiedererkennung wiederkehrender Besucher</li>
             </ul>
-            <p className="mt-3">
-              Diese Cookies fallen unter die Ausnahme des § 25 Abs. 2 Nr. 2 TDDDG (unbedingt erforderlich) – eine Einwilligung ist nicht erforderlich. Wir setzen <strong>keine</strong> Tracking-, Analyse- oder Werbe-Cookies ein, insbesondere kein Google Analytics, keine Social-Media-Pixel und keine Drittanbieter-Reichweitenmessung.
+            <p className="mt-2">
+              Wir haben <em>Google Signals</em> und Werbe-Personalisierung
+              deaktiviert. Rechtsgrundlage: Art. 6 Abs. 1 lit. a DSGVO sowie
+              § 25 Abs. 1 TTDSG (Einwilligung). Mit Google besteht ein
+              Auftragsverarbeitungsvertrag mit EU-Standardvertragsklauseln.
+              Mehr:{' '}
+              <a
+                href="https://policies.google.com/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                policies.google.com/privacy
+              </a>
+              .
+            </p>
+
+            <div className="mt-5">
+              <p className="text-foreground font-medium text-sm mb-2">
+                Deine Wahl jederzeit ändern
+              </p>
+              <ConsentControls />
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-foreground mb-3">
+              5. Speicherdauer
+            </h2>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>
+                <strong>Inhalte (Mietverhältnisse, Protokolle, Dokumente):</strong>{' '}
+                bleiben so lange im Browser, bis du sie löschst oder den
+                Browser-Speicher leerst.
+              </li>
+              <li>
+                <strong>GA4-Daten:</strong> 14 Monate (Google-Default).
+              </li>
+              <li>
+                <strong>Server-Logs (Vercel):</strong> bis zu 30 Tage.
+              </li>
+              <li>
+                <strong>Consent-Wahl:</strong> bis du sie über die Schaltfläche
+                oben oder per Browser-Daten-Löschen zurücksetzt.
+              </li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-foreground mb-3">
+              6. Deine Rechte
+            </h2>
+            <p>Nach DSGVO hast du jederzeit folgende Rechte:</p>
+            <ul className="list-disc pl-5 mt-2 space-y-1">
+              <li>Auskunft (Art. 15)</li>
+              <li>Berichtigung (Art. 16)</li>
+              <li>Löschung (Art. 17)</li>
+              <li>Einschränkung der Verarbeitung (Art. 18)</li>
+              <li>Datenübertragbarkeit (Art. 20)</li>
+              <li>Widerspruch (Art. 21)</li>
+              <li>Widerruf einer erteilten Einwilligung (Art. 7 Abs. 3) — z.&nbsp;B.
+                  über die Schaltfläche oben</li>
+              <li>
+                Beschwerde bei einer Aufsichtsbehörde (Art. 77) — zuständig:{' '}
+                <a
+                  href="https://www.lfd.niedersachsen.de"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Landesbeauftragte für den Datenschutz Niedersachsen
+                </a>
+              </li>
+            </ul>
+            <p className="mt-2">
+              Da deine Inhaltsdaten ausschließlich im eigenen Browser liegen,
+              kannst du Auskunft und Löschung selbst herstellen — über den
+              Datenexport im Dashboard und die Funktion „Lokale Daten
+              zurücksetzen".
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">8. Einwilligung bei Registrierung</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">
+              7. Keine automatisierte Entscheidung, kein Profiling
+            </h2>
             <p>
-              Bei der Registrierung wird Ihre ausdrückliche Zustimmung zu unseren AGB und zur Kenntnisnahme dieser Datenschutzerklärung erfasst. Der Zeitpunkt der Zustimmung sowie die akzeptierte Version werden zum Nachweis nach Art. 7 DSGVO in Ihrem Benutzerprofil gespeichert.
+              Es findet keine automatisierte Entscheidungsfindung im Sinne von
+              Art. 22 DSGVO statt. Inhalte werden nicht ausgewertet, nicht an
+              Dritte weitergegeben und nicht für Werbung genutzt.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">9. Datensicherheit</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3">
+              8. Änderungen dieser Erklärung
+            </h2>
             <p>
-              Alle Datenübertragungen erfolgen verschlüsselt über HTTPS/TLS. Datenbankzugriffe sind durch Row-Level-Security (RLS) auf Supabase abgesichert – jeder Nutzer sieht ausschließlich eigene Daten. Zahlungsdaten werden nicht auf unseren Servern gespeichert.
+              Wir passen diese Datenschutzerklärung an, wenn sich die
+              technischen Gegebenheiten oder die Rechtslage ändern. Die jeweils
+              aktuelle Version findest du immer auf dieser Seite.
             </p>
           </section>
-
         </div>
       </main>
       <Footer />

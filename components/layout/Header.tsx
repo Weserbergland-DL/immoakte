@@ -2,15 +2,12 @@
 
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 import { Logo } from '@/components/brand/Logo'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 
 export default function Header() {
-  const pathname = usePathname()
-  const onPricing = pathname === '/pricing'
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
@@ -34,17 +31,6 @@ export default function Header() {
           <Logo size={26} />
         </Link>
         <div className="flex items-center gap-2">
-          <Link
-            href="/pricing"
-            className={cn(
-              'hidden sm:inline-flex items-center h-9 px-3.5 rounded-md text-sm font-medium transition-colors',
-              onPricing
-                ? 'text-foreground bg-muted'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
-            )}
-          >
-            Preise
-          </Link>
           <ThemeToggle compact className="hidden sm:inline-flex" />
           <Link href="/dashboard" className="ml-1">
             <Button size="sm">Dashboard</Button>

@@ -15,6 +15,7 @@ import {
   CircleCheck, Clock, Search, Download, RefreshCw,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -248,16 +249,12 @@ export default function Dashboard() {
       <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border/60">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-5">
-            <Logo size={26} />
+            <Link href="/" aria-label="Zur Startseite">
+              <Logo size={26} />
+            </Link>
             <nav className="hidden md:flex items-center gap-1">
               <button className="px-3 py-1.5 rounded-md text-sm font-medium text-foreground bg-muted">
                 Dashboard
-              </button>
-              <button
-                onClick={() => router.push('/pricing')}
-                className="px-3 py-1.5 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-              >
-                Preise
               </button>
             </nav>
           </div>
